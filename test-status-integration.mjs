@@ -131,8 +131,18 @@ async function testResponseStructure(swapId) {
     pass(`Amount: ${data.amount}`);
     pass(`Rate: ${data.rate}`);
     pass(`Estimated receive: ${data.estimated_receive}`);
+    pass(`Rate type: ${data.rate_type}`);
+    pass(`Sandbox: ${data.is_sandbox}`);
     
     // Check optional fields
+    if (data.network_fee !== undefined) {
+      pass(`Network fee: ${data.network_fee}`);
+    }
+    
+    if (data.total_fee !== undefined) {
+      pass(`Total fee: ${data.total_fee}`);
+    }
+    
     if (data.provider_swap_id) {
       pass(`Provider swap ID: ${data.provider_swap_id}`);
     }
