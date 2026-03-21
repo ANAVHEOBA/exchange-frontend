@@ -1,0 +1,156 @@
+.swap-widget {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 13px;
+  box-shadow: 0 0 20px 15px rgba(94, 179, 214, 0.15);
+  overflow: hidden;
+}
+
+.swap-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(25, 25, 25, 0.9);
+}
+
+.tab-btn {
+  background: rgba(25, 25, 25, 0.9);
+  border: none;
+  color: white;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn.active {
+  background: rgba(200, 200, 200, 0.08);
+  border-bottom-color: #5eb3d6;
+}
+
+.swap-form {
+  background: rgba(25, 25, 25, 0.9);
+  padding: 20px;
+}
+
+.form-label {
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 15px;
+}
+
+.toggle-btn {
+  background: rgba(192, 192, 192, 0.2);
+  border: 2px solid rgba(192, 192, 192, 0.2);
+  border-radius: 13px;
+  color: white;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.toggle-btn.active {
+  background: rgba(70, 70, 70, 0.7);
+  border-color: #5eb3d6;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.usd-label {
+  position: absolute;
+  top: -18px;
+  left: 12px;
+  font-size: 12px;
+  color: #999;
+}
+
+.input-group input {
+  width: 100%;
+  height: 46px;
+  border: 2px solid #5a5a5a;
+  border-radius: 30px;
+  background: white;
+  padding: 0 140px 0 20px;
+  font-size: 15px;
+  color: #000;
+  text-align: center;
+}
+
+.input-group input::placeholder {
+  color: #000;
+  opacity: 0.8;
+}
+
+.coin-btn {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  height: 42px;
+  background: #5eb3d6;
+  border: none;
+  border-radius: 30px;
+  padding: 0 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coin-btn:hover {
+  background: #4ea3c6;
+}
+
+.min-label {
+  text-align: center;
+  color: white;
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.exchange-btn {
+  width: 100%;
+  background: #5eb3d6;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.exchange-btn:hover {
+  background: #4ea3c6;
+}
+
+.check-link {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.check-link a {
+  color: white;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.check-link a:hover {
+  color: #5eb3d6;
+}
