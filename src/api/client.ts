@@ -1,20 +1,69 @@
 /**
  * API Client
- * Base HTTP client with retry logic and error handling
+ * Base HTTP client with retry logic, error handling, and performance metrics
  */
 
 import { API_CONFIG } from '../config/api';
 import type { ApiError } from '../types/api';
 
+export interface RequestMetrics {
+  endpoint: string;
+  method: string;
+  duration: number;      // milliseconds
+  status: number;
+  timestamp: number;
+  cached?: boolean;
+}
+
 export class ApiClient {
   private baseURL: string;
   private timeout: number;
   private headers: Record<string, string>;
+  private metrics: RequestMetrics[] = [];
+  private enableMetrics: boolean;
 
   constructor() {
     this.baseURL = API_CONFIG.baseURL;
     this.timeout = API_CONFIG.timeout;
     this.headers = API_CONFIG.headers;
+    this.enableMetrics = import.meta.env.VITE_ENABLE_DEBUG_LOGS === 'true';
+  }
+
+  private logMetrics(metrics: RequestMetrics): void {
+    if (!this.enableMetrics) return;
+
+    this.metrics.push(metrics);
+    
+    // Keep only last 100 requests
+    if (this.metrics.length > 100) {
+      this.metrics.shift();
+    }
+
+    // Log to console in development
+    const color = metrics.duration < 100 ? '\x1b[32m' : metrics.duration < 500 ? '\x1b[33m' : '\x1b[31m';
+    const reset = '\x1b[0m';
+    console.log(
+      `${color}[API]${reset} ${metrics.method} ${metrics.endpoint} - ${metrics.duration}ms (${metrics.status})`
+    );
+  }
+
+  public getMetrics(): RequestMetrics[] {
+    return [...this.metrics];
+  }
+
+  public getAverageResponseTime(endpoint?: string): number {
+    const filtered = endpoint 
+      ? this.metrics.filter(m => m.endpoint === endpoint)
+      : this.metrics;
+    
+    if (filtered.length === 0) return 0;
+    
+    const total = filtered.reduce((sum, m) => sum + m.duration, 0);
+    return Math.round(total / filtered.length);
+  }
+
+  public clearMetrics(): void {
+    this.metrics = [];
   }
 
   private async fetchWithTimeout(
@@ -75,6 +124,7 @@ export class ApiClient {
   }
 
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+    const startTime = performance.now();
     const url = new URL(`${this.baseURL}${endpoint}`);
     
     if (params) {
@@ -91,13 +141,36 @@ export class ApiClient {
         headers: this.headers,
       });
 
+      const duration = Math.round(performance.now() - startTime);
+      this.logMetrics({
+        endpoint,
+        method: 'GET',
+        duration,
+        status: response.status,
+        timestamp: Date.now(),
+      });
+
       return this.handleResponse<T>(response);
     } catch (error) {
+      const duration = Math.round(performance.now() - startTime);
+      const status = (error && typeof error === 'object' && 'status' in error) 
+        ? (error as ApiError).status || 0 
+        : 0;
+      
+      this.logMetrics({
+        endpoint,
+        method: 'GET',
+        duration,
+        status,
+        timestamp: Date.now(),
+      });
+
       return this.handleError(error);
     }
   }
 
   async post<T>(endpoint: string, body?: any): Promise<T> {
+    const startTime = performance.now();
     const url = `${this.baseURL}${endpoint}`;
 
     try {
@@ -107,8 +180,30 @@ export class ApiClient {
         body: body ? JSON.stringify(body) : undefined,
       });
 
+      const duration = Math.round(performance.now() - startTime);
+      this.logMetrics({
+        endpoint,
+        method: 'POST',
+        duration,
+        status: response.status,
+        timestamp: Date.now(),
+      });
+
       return this.handleResponse<T>(response);
     } catch (error) {
+      const duration = Math.round(performance.now() - startTime);
+      const status = (error && typeof error === 'object' && 'status' in error) 
+        ? (error as ApiError).status || 0 
+        : 0;
+      
+      this.logMetrics({
+        endpoint,
+        method: 'POST',
+        duration,
+        status,
+        timestamp: Date.now(),
+      });
+
       return this.handleError(error);
     }
   }

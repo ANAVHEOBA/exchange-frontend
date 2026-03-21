@@ -13,6 +13,7 @@ export const API_CONFIG = {
   
   // Endpoints
   endpoints: {
+    // Swap endpoints
     currencies: '/swap/currencies',
     providers: '/swap/providers',
     pairs: '/swap/pairs',
@@ -21,6 +22,14 @@ export const API_CONFIG = {
     swapCreate: '/swap/create',
     swapStatus: '/swap',
     swapHistory: '/swap/history',
+    validateAddress: '/swap/validate-address',
+    
+    // Auth endpoints
+    authRegister: '/auth/register',
+    authLogin: '/auth/login',
+    authLogout: '/auth/logout',
+    authMe: '/auth/me',
+    authVerifyEmail: '/auth/verify-email',
   },
   
   // Request settings

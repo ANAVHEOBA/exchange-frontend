@@ -13,7 +13,12 @@
     "test:estimate": "node test-estimate-integration.mjs",
     "test:swap": "node test-swap-integration.mjs",
     "test:status": "node test-status-integration.mjs",
-    "test:history": "node test-history-integration.mjs"
+    "test:history": "node test-history-integration.mjs",
+    "test:validation": "node test-validation-integration.mjs",
+    "test:auth": "node test-auth-integration.mjs",
+    "test:auth:complete": "node test-auth-complete.mjs",
+    "test:login": "node test-login-integration.mjs",
+    "test:metrics": "node test-metrics.mjs"
   },
   "dependencies": {
     "@solidjs/meta": "^0.29.4",
