@@ -3,10 +3,15 @@
  * Hook for accessing currency data and operations
  */
 
+import { onMount } from 'solid-js';
 import { currencyStore } from '../stores/currencyStore';
 import type { Currency } from '../types/currency';
 
 export function useCurrencies() {
+  onMount(() => {
+    void currencyStore.loadCurrencies();
+  });
+
   return {
     // State
     currencies: currencyStore.currencies,
@@ -15,8 +20,8 @@ export function useCurrencies() {
     searchTerm: currencyStore.searchTerm,
     
     // Computed
-    loading: currencyStore.currencies.loading,
-    error: currencyStore.currencies.error,
+    loading: currencyStore.loading,
+    error: currencyStore.error,
     
     // Actions
     search: currencyStore.searchCurrencies,

@@ -18,47 +18,105 @@ import type {
   VerifyEmailResponse
 } from '../../types/auth';
 
-/**
- * Register a new user
- * Creates a new user account with email and password
- */
-export async function register(request: RegisterRequest): Promise<RegisterResponse> {
-  const url = API_CONFIG.endpoints.authRegister;
-  return apiClient.post<RegisterResponse>(url, request);
-}
+const registerUser = async (request: RegisterRequest): Promise<RegisterResponse> => {
+  return apiClient.post<RegisterResponse>(API_CONFIG.endpoints.authRegister, request);
+};
 
-/**
- * Login user
- * Authenticates user with email and password
- */
-export async function login(request: LoginRequest): Promise<LoginResponse> {
-  const url = API_CONFIG.endpoints.authLogin;
-  return apiClient.post<LoginResponse>(url, request);
-}
+const loginUser = async (request: LoginRequest): Promise<LoginResponse> => {
+  return apiClient.post<LoginResponse>(API_CONFIG.endpoints.authLogin, request);
+};
 
-/**
- * Logout current user
- * Invalidates the current session
- */
-export async function logout(): Promise<LogoutResponse> {
-  const url = API_CONFIG.endpoints.authLogout;
-  return apiClient.post<LogoutResponse>(url, {});
-}
+const logoutUser = async (): Promise<LogoutResponse> => {
+  return apiClient.post<LogoutResponse>(API_CONFIG.endpoints.authLogout, {});
+};
 
-/**
- * Get current user
- * Returns the currently authenticated user
- */
-export async function getCurrentUser(): Promise<MeResponse> {
-  const url = API_CONFIG.endpoints.authMe;
-  return apiClient.get<MeResponse>(url);
-}
+const getCurrentUserRequest = async (): Promise<MeResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<MeResponse>(API_CONFIG.endpoints.authMe)
+  );
+};
 
-/**
- * Verify email address
- * Verifies user email with the token sent via email
- */
-export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
-  const url = `${API_CONFIG.endpoints.authVerifyEmail}?token=${encodeURIComponent(token)}`;
-  return apiClient.get<VerifyEmailResponse>(url);
-}
+const verifyEmailRequest = async (token: string): Promise<VerifyEmailResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<VerifyEmailResponse>(API_CONFIG.endpoints.authVerifyEmail, { token })
+  );
+};
+
+const storeSession = (response: LoginResponse): void => {
+  apiClient.setAuthToken(response.access_token, response.token_type);
+};
+
+const clearSession = (): void => {
+  apiClient.clearAuthToken();
+};
+
+export const authApi = {
+  /**
+   * Register a new user
+   * Creates a new user account with email and password
+   */
+  register: registerUser,
+
+  /**
+   * Login user
+   * Authenticates user with email and password
+   */
+  login: loginUser,
+
+  /**
+   * Login user and persist the access token for protected requests
+   */
+  async loginAndStoreSession(request: LoginRequest): Promise<LoginResponse> {
+    const response = await loginUser(request);
+    storeSession(response);
+    return response;
+  },
+
+  /**
+   * Logout current user
+   * Invalidates the current session
+   */
+  logout: logoutUser,
+
+  /**
+   * Logout and clear the locally stored access token
+   */
+  async logoutAndClearSession(): Promise<LogoutResponse> {
+    const response = await logoutUser();
+    clearSession();
+    return response;
+  },
+
+  /**
+   * Get current user
+   * Returns the currently authenticated user
+   */
+  getCurrentUser: getCurrentUserRequest,
+
+  /**
+   * Verify email address
+   * Verifies user email with the token sent via email
+   */
+  verifyEmail: verifyEmailRequest,
+
+  /**
+   * Persist a session from a successful login response
+   */
+  storeSession,
+
+  /**
+   * Clear the locally stored session token
+   */
+  clearSession,
+
+  /**
+   * Inspect the current locally stored session token
+   */
+  getSession: () => apiClient.getAuthToken(),
+};
+
+export const register = authApi.register;
+export const login = authApi.login;
+export const logout = authApi.logout;
+export const getCurrentUser = authApi.getCurrentUser;
+export const verifyEmail = authApi.verifyEmail;

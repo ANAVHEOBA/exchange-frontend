@@ -1,56 +1,85 @@
+@font-face {
+  font-family: "DM Sans";
+  src: url("/fonts/DMSans-Regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  src: url("/fonts/DMSans-Bold.woff") format("woff");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/RobotoMono-Regular.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 body {
-  font-family: Gordita, Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  background-color: #ffffff;
-  color: #333;
-  background: white url("/background.jpg") center center;
-  background-repeat: no-repeat;
-  background-size: contain;
+  font-family: "DM Sans", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  background: #ffffff;
+  color: #0f172a;
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Raleway", sans-serif;
+  font-family: "DM Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 main {
   padding: 0;
   margin: 0;
+  background: #ffffff;
+  overflow-x: hidden;
 }
 
 a {
-  margin-right: 1rem;
-  color: #333;
+  color: #2563eb;
   text-decoration: none;
 }
 
 a:hover {
-  color: #5eb3d6;
+  color: #1d4ed8;
 }
 
 h1 {
-  color: #335d92;
-  text-transform: uppercase;
-  font-size: 4rem;
-  font-weight: 100;
-  line-height: 1.1;
-  margin: 4rem auto;
-  max-width: 14rem;
+  color: #0f172a;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  margin: 0;
+  max-width: none;
+  text-transform: none;
 }
 
 p {
-  max-width: 14rem;
-  margin: 2rem auto;
-  line-height: 1.35;
+  max-width: none;
+  margin: 0;
+  line-height: 1.6;
 }
 
-@media (min-width: 480px) {
-  h1 {
-    max-width: none;
-  }
-
-  p {
-    max-width: none;
-  }
+button,
+input,
+textarea {
+  font: inherit;
 }

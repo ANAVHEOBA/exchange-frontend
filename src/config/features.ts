@@ -20,7 +20,7 @@ export const FEATURES = {
   // Debounce settings (milliseconds)
   debounce: {
     input: Number(import.meta.env.VITE_INPUT_DEBOUNCE) || 300,
-    rateFetch: Number(import.meta.env.VITE_RATE_FETCH_DEBOUNCE) || 500,
+    rateFetch: Number(import.meta.env.VITE_RATE_FETCH_DEBOUNCE) || 150,
   },
 } as const;
 

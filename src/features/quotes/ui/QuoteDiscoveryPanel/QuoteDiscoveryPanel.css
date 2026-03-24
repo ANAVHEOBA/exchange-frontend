@@ -1,0 +1,263 @@
+.quote-discovery {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.quote-discovery__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.quote-discovery__title {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.quote-discovery__guarantee {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.quote-discovery__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.quote-discovery__tab {
+  min-height: 40px;
+  border: 1px solid #dbe3ee;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #526075;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quote-discovery__tab--active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.quote-discovery__summary,
+.quote-discovery__state {
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.quote-discovery__state {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.quote-discovery__state--error {
+  border-color: #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+}
+
+.quote-discovery__state--preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quote-discovery__summary-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: baseline;
+}
+
+.quote-discovery__summary-provider {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.quote-discovery__summary-amount {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.quote-discovery__summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+
+.quote-discovery__summary-meta span {
+  padding: 0.26rem 0.55rem;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #526075;
+  font-size: 0.74rem;
+}
+
+.quote-discovery__table {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.quote-discovery__table-head,
+.quote-discovery__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(92px, 1fr) minmax(70px, 0.75fr) minmax(62px, 0.65fr) minmax(74px, 0.75fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.quote-discovery__table-head {
+  padding: 0.8rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.quote-discovery__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.quote-discovery__row {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-top: 1px solid #eef2f7;
+  background: #ffffff;
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quote-discovery__row:first-child {
+  border-top: none;
+}
+
+.quote-discovery__row:hover {
+  background: #f8fbff;
+}
+
+.quote-discovery__row--selected {
+  background: #eff6ff;
+}
+
+.quote-discovery__exchange {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.quote-discovery__exchange-logo,
+.quote-discovery__exchange-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.quote-discovery__exchange-logo {
+  object-fit: cover;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.quote-discovery__exchange-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.quote-discovery__exchange-name,
+.quote-discovery__value,
+.quote-discovery__privacy {
+  min-width: 0;
+}
+
+.quote-discovery__exchange-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.quote-discovery__value {
+  color: #0f172a;
+  font-size: 0.83rem;
+}
+
+.quote-discovery__privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: help;
+}
+
+.quote-discovery__privacy-badge--a {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.quote-discovery__privacy-badge--b {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.quote-discovery__privacy-badge--c,
+.quote-discovery__privacy-badge--kyc {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.quote-discovery__privacy-badge--d {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 900px) {
+  .quote-discovery__table {
+    overflow-x: auto;
+  }
+
+  .quote-discovery__table-head,
+  .quote-discovery__row {
+    min-width: 620px;
+  }
+}
+
+@media (max-width: 640px) {
+  .quote-discovery__summary-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

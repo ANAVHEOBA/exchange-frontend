@@ -6,6 +6,18 @@
 import { API_CONFIG } from '../config/api';
 import type { ApiError } from '../types/api';
 
+const ACCESS_TOKEN_STORAGE_KEY = 'exchange.access_token';
+const TOKEN_TYPE_STORAGE_KEY = 'exchange.token_type';
+
+export interface StoredAuthToken {
+  accessToken: string;
+  tokenType: string;
+}
+
+interface RequestOptions {
+  signal?: AbortSignal;
+}
+
 export interface RequestMetrics {
   endpoint: string;
   method: string;
@@ -21,6 +33,7 @@ export class ApiClient {
   private headers: Record<string, string>;
   private metrics: RequestMetrics[] = [];
   private enableMetrics: boolean;
+  private authToken: StoredAuthToken | null = null;
 
   constructor() {
     this.baseURL = API_CONFIG.baseURL;
@@ -66,22 +79,128 @@ export class ApiClient {
     this.metrics = [];
   }
 
-  private async fetchWithTimeout(
-    url: string,
-    options: RequestInit
-  ): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+  public setAuthToken(accessToken: string, tokenType: string = 'Bearer'): void {
+    this.persistAuthToken({ accessToken, tokenType });
+  }
+
+  public getAuthToken(): StoredAuthToken | null {
+    return this.readPersistedAuthToken();
+  }
+
+  public clearAuthToken(): void {
+    this.persistAuthToken(null);
+  }
+
+  private readPersistedAuthToken(): StoredAuthToken | null {
+    if (this.authToken) {
+      return this.authToken;
+    }
+
+    if (typeof window === 'undefined') {
+      return null;
+    }
 
     try {
+      const accessToken = window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+      if (!accessToken) {
+        return null;
+      }
+
+      const tokenType = window.localStorage.getItem(TOKEN_TYPE_STORAGE_KEY) || 'Bearer';
+      this.authToken = { accessToken, tokenType };
+      return this.authToken;
+    } catch {
+      return null;
+    }
+  }
+
+  private persistAuthToken(token: StoredAuthToken | null): void {
+    this.authToken = token;
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      if (!token) {
+        window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+        window.localStorage.removeItem(TOKEN_TYPE_STORAGE_KEY);
+        return;
+      }
+
+      window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token.accessToken);
+      window.localStorage.setItem(TOKEN_TYPE_STORAGE_KEY, token.tokenType);
+    } catch {
+      // Ignore storage errors so API access still works in restricted environments.
+    }
+  }
+
+  private buildHeaders(): Record<string, string> {
+    const headers = { ...this.headers };
+    const authToken = this.readPersistedAuthToken();
+
+    if (authToken?.accessToken) {
+      headers.Authorization = `${authToken.tokenType} ${authToken.accessToken}`;
+    }
+
+    return headers;
+  }
+
+  private async fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    requestOptions?: RequestOptions,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, this.timeout);
+    const externalSignal = requestOptions?.signal;
+
+    const abortFromExternalSignal = () => {
+      controller.abort();
+    };
+
+    try {
+      if (externalSignal) {
+        if (externalSignal.aborted) {
+          controller.abort();
+        } else {
+          externalSignal.addEventListener('abort', abortFromExternalSignal, { once: true });
+        }
+      }
+
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
+      if (externalSignal) {
+        externalSignal.removeEventListener('abort', abortFromExternalSignal);
+      }
       return response;
     } catch (error) {
       clearTimeout(timeoutId);
+      if (externalSignal) {
+        externalSignal.removeEventListener('abort', abortFromExternalSignal);
+      }
+
+      if (error instanceof Error && error.name === 'AbortError') {
+        if (timedOut) {
+          throw {
+            message: 'Request timeout',
+            code: 'TIMEOUT',
+          } as ApiError;
+        }
+
+        throw {
+          message: 'Request aborted',
+          code: 'ABORTED',
+        } as ApiError;
+      }
+
       throw error;
     }
   }
@@ -109,12 +228,6 @@ export class ApiClient {
 
   private handleError(error: unknown): never {
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw {
-          message: 'Request timeout',
-          code: 'TIMEOUT',
-        } as ApiError;
-      }
       throw {
         message: error.message,
         code: 'NETWORK_ERROR',
@@ -123,7 +236,7 @@ export class ApiClient {
     throw error;
   }
 
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(endpoint: string, params?: Record<string, any>, requestOptions?: RequestOptions): Promise<T> {
     const startTime = performance.now();
     const url = new URL(`${this.baseURL}${endpoint}`);
     
@@ -138,8 +251,8 @@ export class ApiClient {
     try {
       const response = await this.fetchWithTimeout(url.toString(), {
         method: 'GET',
-        headers: this.headers,
-      });
+        headers: this.buildHeaders(),
+      }, requestOptions);
 
       const duration = Math.round(performance.now() - startTime);
       this.logMetrics({
@@ -169,16 +282,16 @@ export class ApiClient {
     }
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<T> {
+  async post<T>(endpoint: string, body?: any, requestOptions?: RequestOptions): Promise<T> {
     const startTime = performance.now();
     const url = `${this.baseURL}${endpoint}`;
 
     try {
       const response = await this.fetchWithTimeout(url, {
         method: 'POST',
-        headers: this.headers,
+        headers: this.buildHeaders(),
         body: body ? JSON.stringify(body) : undefined,
-      });
+      }, requestOptions);
 
       const duration = Math.round(performance.now() - startTime);
       this.logMetrics({
@@ -219,6 +332,13 @@ export class ApiClient {
         return await fn();
       } catch (error) {
         lastError = error;
+
+        if (error && typeof error === 'object' && 'code' in error) {
+          const code = (error as ApiError).code;
+          if (code === 'ABORTED') {
+            throw error;
+          }
+        }
         
         // Don't retry on client errors (4xx)
         if (error && typeof error === 'object' && 'status' in error) {

@@ -7,27 +7,45 @@ import { apiClient } from '../client';
 import { API_CONFIG } from '../../config/api';
 import type { RatesResponse, RatesQuery } from '../../types/rate';
 
-/**
- * Fetch exchange rates for a currency pair
- * Returns rates from multiple providers sorted by best rate
- */
-export async function getRates(query: RatesQuery): Promise<RatesResponse> {
-  const params = new URLSearchParams();
-  
-  params.append('from', query.from);
-  params.append('network_from', query.network_from);
-  params.append('to', query.to);
-  params.append('network_to', query.network_to);
-  params.append('amount', query.amount.toString());
-  
-  if (query.rate_type) {
-    params.append('rate_type', query.rate_type);
-  }
-  
-  if (query.provider) {
-    params.append('provider', query.provider);
-  }
-  
-  const url = `${API_CONFIG.endpoints.rates}?${params.toString()}`;
-  return apiClient.get<RatesResponse>(url);
-}
+const getRatesRequest = async (
+  query: RatesQuery,
+  signal?: AbortSignal,
+): Promise<RatesResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<RatesResponse>(API_CONFIG.endpoints.rates, query, { signal })
+  );
+};
+
+export const ratesApi = {
+  /**
+   * Fetch exchange rates for a currency pair
+   * Returns rates from multiple providers sorted by best rate
+   */
+  getAll(query: RatesQuery, signal?: AbortSignal): Promise<RatesResponse> {
+    return getRatesRequest(query, signal);
+  },
+
+  /**
+   * Fetch rates for a single provider
+   */
+  getByProvider(
+    provider: string,
+    query: Omit<RatesQuery, 'provider'>,
+    signal?: AbortSignal,
+  ): Promise<RatesResponse> {
+    return getRatesRequest({ ...query, provider }, signal);
+  },
+
+  /**
+   * Fetch rates for a single rate type
+   */
+  getByRateType(
+    rate_type: NonNullable<RatesQuery['rate_type']>,
+    query: Omit<RatesQuery, 'rate_type'>,
+    signal?: AbortSignal,
+  ): Promise<RatesResponse> {
+    return getRatesRequest({ ...query, rate_type }, signal);
+  },
+};
+
+export const getRates = ratesApi.getAll;

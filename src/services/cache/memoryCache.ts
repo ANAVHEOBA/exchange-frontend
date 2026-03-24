@@ -3,6 +3,8 @@
  * In-memory cache with TTL support
  */
 
+import { CACHE_CONFIG } from '../../config/cache';
+
 interface CacheEntry<T> {
   value: T;
   expiresAt: number;
@@ -91,7 +93,9 @@ export class MemoryCache {
 }
 
 // Export singleton instances for different data types
-export const rateCache = new MemoryCache(1000);
-export const currencyCache = new MemoryCache(1);
-export const providerCache = new MemoryCache(1);
-export const swapCache = new MemoryCache(50);
+export const rateCache = new MemoryCache(CACHE_CONFIG.maxSize.rates);
+export const estimateCache = new MemoryCache(CACHE_CONFIG.maxSize.estimate);
+export const currencyCache = new MemoryCache(CACHE_CONFIG.maxSize.currencies);
+export const providerCache = new MemoryCache(CACHE_CONFIG.maxSize.providers);
+export const pairCache = new MemoryCache(CACHE_CONFIG.maxSize.pairs);
+export const swapCache = new MemoryCache(CACHE_CONFIG.maxSize.swaps);

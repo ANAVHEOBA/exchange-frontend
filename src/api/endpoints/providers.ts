@@ -1,10 +1,13 @@
 /**
  * Providers API Endpoints
- * GET /api/providers - List all exchange providers
+ * GET /swap/providers - List all exchange providers
  */
 
 import { apiClient } from '../client';
+import { API_CONFIG } from '../../config/api';
 import type { Provider, ProviderQuery } from '../../types/provider';
+
+const PROVIDERS_ENDPOINT = API_CONFIG.endpoints.providers;
 
 export const providersApi = {
   /**
@@ -14,7 +17,7 @@ export const providersApi = {
    */
   async getAll(query?: ProviderQuery): Promise<Provider[]> {
     return apiClient.withRetry(() =>
-      apiClient.get<Provider[]>('/swap/providers', query)
+      apiClient.get<Provider[]>(PROVIDERS_ENDPOINT, query)
     );
   },
 
@@ -24,7 +27,27 @@ export const providersApi = {
    */
   async getByRating(rating: string): Promise<Provider[]> {
     return apiClient.withRetry(() =>
-      apiClient.get<Provider[]>('/swap/providers', { rating })
+      apiClient.get<Provider[]>(PROVIDERS_ENDPOINT, { rating })
+    );
+  },
+
+  /**
+   * Get providers by log policy rating
+   * Corresponds to backend: GET /swap/providers?log_policy=A
+   */
+  async getByLogPolicy(log_policy: string): Promise<Provider[]> {
+    return apiClient.withRetry(() =>
+      apiClient.get<Provider[]>(PROVIDERS_ENDPOINT, { log_policy })
+    );
+  },
+
+  /**
+   * Get providers by name
+   * Corresponds to backend: GET /swap/providers?name=ChangeNOW
+   */
+  async getByName(name: string): Promise<Provider[]> {
+    return apiClient.withRetry(() =>
+      apiClient.get<Provider[]>(PROVIDERS_ENDPOINT, { name })
     );
   },
 };

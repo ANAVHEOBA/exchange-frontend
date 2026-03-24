@@ -18,6 +18,33 @@ export const format = {
     return `${format.number(value, decimals)} ${ticker.toUpperCase()}`;
   },
 
+  usd(value: number, maximumFractionDigits: number = 2): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits,
+    }).format(value);
+  },
+
+  percent(value: number, decimals: number = 1, signed: boolean = false): string {
+    const formatted = `${Math.abs(value).toFixed(decimals).replace(/\.?0+$/, '')}%`;
+
+    if (!signed) {
+      return `${value < 0 ? '-' : ''}${formatted}`;
+    }
+
+    if (value > 0) {
+      return `+${formatted}`;
+    }
+
+    if (value < 0) {
+      return `-${formatted}`;
+    }
+
+    return formatted;
+  },
+
   /**
    * Format large numbers with K, M, B suffixes
    */

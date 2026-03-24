@@ -7,24 +7,47 @@ import { apiClient } from '../client';
 import { API_CONFIG } from '../../config/api';
 import type { PairsResponse, PairsQuery } from '../../types/pair';
 
-/**
- * Fetch available trading pairs with optional filtering and pagination
- */
-export async function getPairs(query?: PairsQuery): Promise<PairsResponse> {
-  const params = new URLSearchParams();
-  
-  if (query) {
-    if (query.base_currency) params.append('base_currency', query.base_currency);
-    if (query.quote_currency) params.append('quote_currency', query.quote_currency);
-    if (query.base_network) params.append('base_network', query.base_network);
-    if (query.quote_network) params.append('quote_network', query.quote_network);
-    if (query.status) params.append('status', query.status);
-    if (query.page !== undefined) params.append('page', query.page.toString());
-    if (query.size !== undefined) params.append('size', query.size.toString());
-    if (query.order_by) params.append('order_by', query.order_by);
-    if (query.filter) params.append('filter', query.filter);
-  }
-  
-  const url = `${API_CONFIG.endpoints.pairs}${params.toString() ? `?${params.toString()}` : ''}`;
-  return apiClient.get<PairsResponse>(url);
-}
+const getPairsRequest = async (query?: PairsQuery): Promise<PairsResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<PairsResponse>(API_CONFIG.endpoints.pairs, query)
+  );
+};
+
+export const pairsApi = {
+  /**
+   * Fetch available trading pairs with optional filtering and pagination
+   */
+  getAll: getPairsRequest,
+
+  /**
+   * Filter pairs by base currency
+   */
+  getByBaseCurrency(
+    base_currency: string,
+    query: Omit<PairsQuery, 'base_currency'> = {}
+  ): Promise<PairsResponse> {
+    return getPairsRequest({ ...query, base_currency });
+  },
+
+  /**
+   * Filter pairs by quote currency
+   */
+  getByQuoteCurrency(
+    quote_currency: string,
+    query: Omit<PairsQuery, 'quote_currency'> = {}
+  ): Promise<PairsResponse> {
+    return getPairsRequest({ ...query, quote_currency });
+  },
+
+  /**
+   * Filter pairs by status
+   */
+  getByStatus(
+    status: string,
+    query: Omit<PairsQuery, 'status'> = {}
+  ): Promise<PairsResponse> {
+    return getPairsRequest({ ...query, status });
+  },
+};
+
+export const getPairs = pairsApi.getAll;

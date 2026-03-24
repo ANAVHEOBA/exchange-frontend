@@ -3,7 +3,7 @@
  * State management for currencies with caching
  */
 
-import { createSignal, createResource } from 'solid-js';
+import { createSignal } from 'solid-js';
 import { currenciesApi } from '../api/endpoints/currencies';
 import { currencyCache } from '../services/cache/memoryCache';
 import { CACHE_CONFIG } from '../config/cache';
@@ -14,29 +14,61 @@ import type { Currency } from '../types/currency';
 const CACHE_KEY = CACHE_CONFIG.prefix.currency + 'all';
 
 // Signals for state management
+const [currencies, setCurrencies] = createSignal<Currency[]>([]);
 const [searchTerm, setSearchTerm] = createSignal<string>('');
 const [selectedCurrency, setSelectedCurrency] = createSignal<Currency | null>(null);
+const [loading, setLoading] = createSignal(true);
+const [error, setError] = createSignal<unknown>(null);
+const [initialized, setInitialized] = createSignal(false);
 
-// Resource for fetching currencies with caching
-const [currencies] = createResource(async () => {
-  logger.debug('Fetching currencies...');
-  
-  // Check cache first
-  const cached = currencyCache.get<Currency[]>(CACHE_KEY);
-  if (cached) {
-    logger.debug('Currencies loaded from cache');
-    return cached;
+let currenciesRequest: Promise<Currency[]> | null = null;
+
+const loadCurrencies = async (forceRefresh: boolean = false): Promise<Currency[]> => {
+  if (!forceRefresh) {
+    if (currenciesRequest) {
+      return currenciesRequest;
+    }
+
+    if (initialized()) {
+      return currencies();
+    }
   }
 
-  // Fetch from API
-  const data = await currenciesApi.getAll();
-  
-  // Cache the result
-  currencyCache.set(CACHE_KEY, data, CACHE_CONFIG.ttl.currencies);
-  logger.debug(`Cached ${data.length} currencies`);
-  
-  return data;
-});
+  setLoading(true);
+  setError(null);
+
+  currenciesRequest = (async () => {
+    try {
+      logger.debug('Fetching currencies...');
+
+      if (!forceRefresh) {
+        const cached = currencyCache.get<Currency[]>(CACHE_KEY);
+        if (cached) {
+          logger.debug('Currencies loaded from cache');
+          setCurrencies(cached);
+          return cached;
+        }
+      }
+
+      const data = await currenciesApi.getAll();
+      currencyCache.set(CACHE_KEY, data, CACHE_CONFIG.ttl.currencies);
+      logger.debug(`Cached ${data.length} currencies`);
+      setCurrencies(data);
+      return data;
+    } catch (fetchError) {
+      setError(fetchError);
+      logger.error('Failed to fetch currencies', fetchError);
+      setCurrencies([]);
+      return [];
+    } finally {
+      setLoading(false);
+      setInitialized(true);
+      currenciesRequest = null;
+    }
+  })();
+
+  return currenciesRequest;
+};
 
 // Computed: filtered currencies based on search
 const filteredCurrencies = () => {
@@ -68,7 +100,7 @@ const clearSelection = () => {
 
 const refreshCurrencies = () => {
   currencyCache.delete(CACHE_KEY);
-  currencies.refetch();
+  void loadCurrencies(true);
   logger.info('Currencies cache cleared and refetched');
 };
 
@@ -76,6 +108,8 @@ const refreshCurrencies = () => {
 export const currencyStore = {
   // State
   currencies,
+  loading,
+  error,
   filteredCurrencies,
   selectedCurrency,
   searchTerm,
@@ -85,4 +119,5 @@ export const currencyStore = {
   selectCurrency,
   clearSelection,
   refreshCurrencies,
+  loadCurrencies,
 };
