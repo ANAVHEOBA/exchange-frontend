@@ -11,6 +11,21 @@ import './status.css';
 
 type SwapPageData = Partial<CreateSwapResponse & SwapStatusResponse>;
 
+const mergeDefinedFields = (
+  base: SwapPageData,
+  next: SwapPageData,
+): SwapPageData => {
+  const merged: SwapPageData = { ...base };
+
+  Object.entries(next).forEach(([key, value]) => {
+    if (value !== undefined) {
+      merged[key as keyof SwapPageData] = value as never;
+    }
+  });
+
+  return merged;
+};
+
 const STATUS_LABELS: Record<SwapStatus, string> = {
   waiting: 'Waiting for Funds',
   confirming: 'Confirming Deposit',
@@ -195,10 +210,7 @@ export default function SwapStatusPage() {
       return null;
     }
 
-    return {
-      ...(initial ?? {}),
-      ...(current ?? {}),
-    };
+    return mergeDefinedFields(initial ?? {}, current ?? {});
   });
 
   const resolveCurrency = (ticker?: string, network?: string) => {
