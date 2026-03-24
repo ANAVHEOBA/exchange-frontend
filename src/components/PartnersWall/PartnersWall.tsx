@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import "./PartnersWall.css";
 
 const partnerFiles = [
@@ -57,6 +58,8 @@ const formatPartnerName = (fileName: string) => {
 };
 
 export default function PartnersWall() {
+  const [mobileOpen, setMobileOpen] = createSignal(false);
+
   return (
     <section class="partners-wall" id="partners">
       <div class="partners-wall__inner">
@@ -74,7 +77,28 @@ export default function PartnersWall() {
             <p class="partners-wall__panel-copy">{partnerFiles.length} providers and services</p>
           </div>
 
-          <div class="partners-wall__grid">
+          <button
+            type="button"
+            class="partners-wall__mobile-toggle"
+            aria-expanded={mobileOpen()}
+            aria-controls="partners-wall-grid"
+            onClick={() => setMobileOpen(open => !open)}
+          >
+            <span>Browse providers</span>
+            <span
+              class="partners-wall__mobile-toggle-chevron"
+              classList={{ "partners-wall__mobile-toggle-chevron--open": mobileOpen() }}
+              aria-hidden="true"
+            >
+              ˅
+            </span>
+          </button>
+
+          <div
+            id="partners-wall-grid"
+            class="partners-wall__grid"
+            classList={{ "partners-wall__grid--mobile-open": mobileOpen() }}
+          >
             {partnerFiles.map(fileName => (
               <div class="partners-wall__tile">
                 <img

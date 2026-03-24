@@ -542,6 +542,7 @@ function SwapModal(props: SwapModalProps) {
 
       setCreatedSwapId(response.swap_id);
       setCreatedExecutionKey(executionKey());
+      navigate(`/swap/${response.swap_id}`);
     } catch {
       // The store already captures and exposes the API error.
     }
