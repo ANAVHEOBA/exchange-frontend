@@ -8,6 +8,7 @@ export interface Currency {
   ticker: string;         // Ticker symbol (e.g., "BTC")
   network: string;        // Network name (e.g., "Mainnet")
   memo: boolean;          // Whether coin uses memo/ExtraID
+  extra_id_name?: string; // Human label for memo-like fields (e.g., "Memo", "Destination Tag")
   image: string;          // Icon URL
   minimum: number;        // Minimum tradeable amount
   maximum: number;        // Maximum tradeable amount

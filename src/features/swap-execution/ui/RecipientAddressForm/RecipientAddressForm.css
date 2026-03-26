@@ -19,10 +19,20 @@
   margin-bottom: 0.75rem;
 }
 
+.recipient-address__field-head--subfield {
+  margin-bottom: 0.55rem;
+}
+
 .recipient-address__label {
   color: #0f172a;
   font-size: 0.94rem;
   font-weight: 700;
+}
+
+.recipient-address__required {
+  color: #b91c1c;
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .recipient-address__optional {
@@ -68,6 +78,10 @@
   color: #64748b;
   font-size: 0.76rem;
   line-height: 1.45;
+}
+
+.recipient-address__subfield {
+  margin-top: 0.9rem;
 }
 
 .recipient-address__status {

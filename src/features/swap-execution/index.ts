@@ -7,7 +7,14 @@ export { useAddressValidation } from './model';
 export type {
   AddressValidationController,
   AddressValidationStatus,
+  RecipientExtraIdDescriptor,
+  RecipientExtraIdKind,
   UseAddressValidationOptions,
+} from './model';
+export {
+  describeRecipientExtraId,
+  normalizeRecipientExtraId,
+  validateRecipientExtraId,
 } from './model';
 export {
   default,

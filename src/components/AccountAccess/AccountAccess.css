@@ -1,0 +1,271 @@
+.account-access {
+  max-width: 1240px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+  padding: 40px 32px 88px;
+}
+
+.account-access__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 442px);
+  gap: 80px;
+  align-items: start;
+}
+
+.account-access__copy {
+  max-width: 560px;
+  padding-top: 72px;
+}
+
+.account-access__title {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(3.4rem, 7vw, 5.2rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+.account-access__lead {
+  max-width: 520px;
+  margin: 20px 0 0;
+  color: #526075;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.account-access__text {
+  max-width: 46ch;
+  margin-top: 18px;
+  color: #526075;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.account-access__text a {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.account-access__card {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.1);
+  padding: 24px;
+  color: #0f172a;
+}
+
+.account-access__card-kicker {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.account-access__card-title {
+  margin: 10px 0 16px;
+  color: #0f172a;
+  font-size: 1.28rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.account-access__status {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.account-access__status--error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.account-access__status--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.account-access__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-access__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-access__field-label {
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.account-access__input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #dbe3ee;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 0 16px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.account-access__input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.account-access__submit {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 2px;
+  border: none;
+  border-radius: 18px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.account-access__submit:hover {
+  background: #1d4ed8;
+}
+
+.account-access__submit:disabled,
+.account-access__session-button:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.account-access__submit:disabled {
+  background: #bfdbfe;
+}
+
+.account-access__link {
+  margin-top: 2px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.account-access__link:hover {
+  color: #1d4ed8;
+}
+
+.account-access__session {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-access__session-title {
+  margin-top: 10px;
+  color: #0f172a;
+  font-size: 1.28rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.account-access__session-copy {
+  margin: 12px 0 0;
+  color: #526075;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.account-access__session-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.account-access__session-link,
+.account-access__session-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54px;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.account-access__session-link {
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.account-access__session-button {
+  border: 1px solid #dbe3ee;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  .account-access {
+    min-height: auto;
+    padding: 24px 20px 64px;
+  }
+
+  .account-access__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .account-access__copy {
+    max-width: none;
+    padding-top: 36px;
+  }
+
+  .account-access__card {
+    width: min(420px, 100%);
+  }
+}
+
+@media (max-width: 640px) {
+  .account-access {
+    padding: 18px 16px 48px;
+  }
+
+  .account-access__copy {
+    padding-top: 20px;
+  }
+
+  .account-access__title {
+    font-size: clamp(2.9rem, 13vw, 4.3rem);
+  }
+
+  .account-access__lead {
+    font-size: 1rem;
+  }
+
+  .account-access__card {
+    width: 100%;
+    padding: 20px;
+  }
+}

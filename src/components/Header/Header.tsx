@@ -95,8 +95,13 @@ export default function Header() {
     <header class="site-header">
       <div class="site-header__inner">
         <a href="/" class="site-brand" aria-label="Assetar home">
-          <span class="site-brand__word">ASSETAR</span>
-          <img class="site-brand__logo" src="/background.jpg" alt="" aria-hidden="true" />
+          <img
+            class="site-brand__logo"
+            src="/assetar%20logo%20with%20name%202.jpg"
+            alt="Assetar"
+            width="3508"
+            height="2481"
+          />
         </a>
 
         <nav class="site-nav" aria-label="Primary">
@@ -175,7 +180,7 @@ export default function Header() {
 
               <Show when={accountMenuOpen()}>
                 <div class="site-account__menu" role="menu" aria-label="Account">
-                  <a class="site-account__menu-link" href="#swap">
+                  <a class="site-account__menu-link" href="/login">
                     Login
                   </a>
                   <a class="site-account__menu-link" href="/about">

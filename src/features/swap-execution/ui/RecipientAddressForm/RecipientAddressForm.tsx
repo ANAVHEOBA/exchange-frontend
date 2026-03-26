@@ -3,11 +3,25 @@ import type { Currency } from '../../../../types/currency';
 import type { AddressValidationController } from '../../model';
 import './RecipientAddressForm.css';
 
+export interface ExtraIdFieldConfig {
+  value: string;
+  label: string;
+  placeholder: string;
+  helper: string;
+  error?: string | null;
+  required?: boolean;
+  disabled?: boolean;
+  inputMode?: 'text' | 'numeric';
+  onInput: (value: string) => void;
+}
+
 export interface RecipientAddressFormProps {
   currency: Currency | null;
   refundCurrency?: Currency | null;
   address: string;
   refundAddress?: string;
+  recipientExtraIdField?: ExtraIdFieldConfig | null;
+  refundExtraIdField?: ExtraIdFieldConfig | null;
   onInput: (value: string) => void;
   onRefundInput?: (value: string) => void;
   validation: AddressValidationController;
@@ -82,6 +96,42 @@ export default function RecipientAddressForm(props: RecipientAddressFormProps) {
           </div>
         </Show>
 
+        <Show when={props.recipientExtraIdField}>
+          {field => (
+            <div class="recipient-address__subfield">
+              <div class="recipient-address__field-head recipient-address__field-head--subfield">
+                <div class="recipient-address__label">{field().label}</div>
+                <div
+                  classList={{
+                    'recipient-address__required': Boolean(field().required),
+                    'recipient-address__optional': !field().required,
+                  }}
+                >
+                  {field().required ? 'Required' : 'Optional'}
+                </div>
+              </div>
+
+              <input
+                class="recipient-address__input"
+                disabled={field().disabled}
+                inputMode={field().inputMode}
+                type="text"
+                placeholder={field().placeholder}
+                value={field().value}
+                onInput={event => field().onInput(event.currentTarget.value)}
+              />
+
+              <div class="recipient-address__helper">{field().helper}</div>
+
+              <Show when={field().error}>
+                <div class="recipient-address__status recipient-address__status--error">
+                  {field().error}
+                </div>
+              </Show>
+            </div>
+          )}
+        </Show>
+
         <Switch>
           <Match when={props.validation.status() === 'valid'}>
             <div class="recipient-address__status recipient-address__status--valid">
@@ -133,6 +183,42 @@ export default function RecipientAddressForm(props: RecipientAddressFormProps) {
           <div class="recipient-address__helper">
             Use this if you want the provider to have a return address available when a route fails.
           </div>
+
+          <Show when={props.refundExtraIdField}>
+            {field => (
+              <div class="recipient-address__subfield">
+                <div class="recipient-address__field-head recipient-address__field-head--subfield">
+                  <div class="recipient-address__label">{field().label}</div>
+                  <div
+                    classList={{
+                      'recipient-address__required': Boolean(field().required),
+                      'recipient-address__optional': !field().required,
+                    }}
+                  >
+                    {field().required ? 'Required' : 'Optional'}
+                  </div>
+                </div>
+
+                <input
+                  class="recipient-address__input"
+                  disabled={field().disabled}
+                  inputMode={field().inputMode}
+                  type="text"
+                  placeholder={field().placeholder}
+                  value={field().value}
+                  onInput={event => field().onInput(event.currentTarget.value)}
+                />
+
+                <div class="recipient-address__helper">{field().helper}</div>
+
+                <Show when={field().error}>
+                  <div class="recipient-address__status recipient-address__status--error">
+                    {field().error}
+                  </div>
+                </Show>
+              </div>
+            )}
+          </Show>
         </div>
       </Show>
     </section>

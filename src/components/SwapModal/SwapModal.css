@@ -119,6 +119,7 @@
   font-size: 1.8rem;
   font-weight: 500;
   text-align: right;
+  line-height: 1.1;
   outline: none;
 }
 
@@ -130,21 +131,11 @@
   cursor: default;
 }
 
-.swap-coin__amount-code {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  color: #94a3b8;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
 .swap-coin__meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 8px;
   color: #64748b;
   font-size: 0.84rem;
 }
@@ -599,12 +590,6 @@
   .swap-coin__amount input {
     text-align: left;
     font-size: 1.35rem;
-  }
-
-  .swap-coin__amount-code {
-    position: static;
-    display: inline-block;
-    margin-top: 4px;
   }
 
   .swap-coin__meta {

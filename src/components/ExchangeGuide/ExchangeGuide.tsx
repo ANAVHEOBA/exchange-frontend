@@ -1,5 +1,9 @@
 import "./ExchangeGuide.css";
 
+export interface ExchangeGuideProps {
+  ctaHref?: string;
+}
+
 const highlights = [
   {
     eyebrow: "Simple and Reliable",
@@ -38,7 +42,7 @@ const steps = [
   },
 ];
 
-export default function ExchangeGuide() {
+export default function ExchangeGuide(props: ExchangeGuideProps) {
   return (
     <section class="exchange-guide" id="how-it-works">
       <div class="exchange-guide__intro">
@@ -71,7 +75,7 @@ export default function ExchangeGuide() {
           <h3 class="exchange-guide__steps-title">From quote to payout without the guesswork.</h3>
         </div>
 
-        <a class="exchange-guide__cta" href="#swap">
+        <a class="exchange-guide__cta" href={props.ctaHref ?? "#swap"}>
           Start exchange
         </a>
       </div>

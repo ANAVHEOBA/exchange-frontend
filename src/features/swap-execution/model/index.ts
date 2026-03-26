@@ -4,3 +4,12 @@ export type {
   AddressValidationStatus,
   UseAddressValidationOptions,
 } from './useAddressValidation';
+export {
+  describeRecipientExtraId,
+  normalizeRecipientExtraId,
+  validateRecipientExtraId,
+} from './extraId';
+export type {
+  RecipientExtraIdDescriptor,
+  RecipientExtraIdKind,
+} from './extraId';

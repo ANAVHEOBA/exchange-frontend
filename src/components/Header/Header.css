@@ -14,24 +14,15 @@
 .site-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  color: #0f172a;
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.06em;
   flex-shrink: 0;
-}
-
-.site-brand__word {
-  display: inline-block;
+  line-height: 0;
 }
 
 .site-brand__logo {
-  width: 28px;
-  height: 28px;
-  object-fit: cover;
-  border-radius: 9px;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.18);
+  display: block;
+  width: auto;
+  height: clamp(58px, 7vw, 84px);
+  object-fit: contain;
 }
 
 .site-nav {
@@ -230,15 +221,8 @@
     display: none;
   }
 
-  .site-brand {
-    gap: 8px;
-    font-size: 1.18rem;
-  }
-
   .site-brand__logo {
-    width: 24px;
-    height: 24px;
-    border-radius: 8px;
+    height: clamp(52px, 18vw, 68px);
   }
 
   .site-header__actions {
@@ -279,7 +263,11 @@
   }
 
   .site-brand {
-    font-size: 1.02rem;
+    max-width: 96px;
+  }
+
+  .site-brand__logo {
+    height: 48px;
   }
 
   .site-language__trigger,

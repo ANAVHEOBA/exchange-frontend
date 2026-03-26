@@ -1,8 +1,14 @@
-import { Show, createEffect, createMemo, createSignal } from 'solid-js';
+import { Show, createEffect, createMemo, createSignal, on } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { CurrencySelector } from '../../features/currencies';
 import { QuoteDiscoveryPanel, useQuoteDiscovery } from '../../features/quotes';
-import { RecipientAddressForm, useAddressValidation } from '../../features/swap-execution';
+import {
+  RecipientAddressForm,
+  describeRecipientExtraId,
+  normalizeRecipientExtraId,
+  useAddressValidation,
+  validateRecipientExtraId,
+} from '../../features/swap-execution';
 import { useCurrencies } from '../../hooks/useCurrencies';
 import { useSwap } from '../../hooks/useSwap';
 import type { Currency } from '../../types/currency';
@@ -153,7 +159,9 @@ function SwapModal(props: SwapModalProps) {
   const [toCurrency, setToCurrency] = createSignal<Currency | null>(null);
   const [amount, setAmount] = createSignal(props.initialAmount ?? '0.1');
   const [recipientAddress, setRecipientAddress] = createSignal('');
+  const [recipientExtraId, setRecipientExtraId] = createSignal('');
   const [refundAddress, setRefundAddress] = createSignal('');
+  const [refundExtraId, setRefundExtraId] = createSignal('');
   const [detailsOpen, setDetailsOpen] = createSignal(false);
   const [createdSwapId, setCreatedSwapId] = createSignal<string | null>(null);
   const [createdExecutionKey, setCreatedExecutionKey] = createSignal<string | null>(null);
@@ -226,6 +234,103 @@ function SwapModal(props: SwapModalProps) {
     address: recipientAddress,
     currency: toCurrency,
   });
+  const recipientExtraIdDescriptor = createMemo(() => describeRecipientExtraId(toCurrency()));
+  const refundExtraIdDescriptor = createMemo(() => describeRecipientExtraId(fromCurrency()));
+  const normalizedRecipientExtraId = createMemo(() => {
+    return normalizeRecipientExtraId(recipientExtraId());
+  });
+  const normalizedRefundExtraId = createMemo(() => {
+    return normalizeRecipientExtraId(refundExtraId());
+  });
+  const recipientExtraIdError = createMemo(() => {
+    return validateRecipientExtraId(
+      toCurrency(),
+      recipientExtraId(),
+      Boolean(recipientExtraIdDescriptor()),
+    );
+  });
+  const refundExtraIdError = createMemo(() => {
+    if (!refundAddress().trim() || !refundExtraIdDescriptor()) {
+      return null;
+    }
+
+    return validateRecipientExtraId(fromCurrency(), refundExtraId(), false);
+  });
+
+  createEffect(on(
+    () => {
+      const currency = toCurrency();
+      return currency ? `${currency.ticker}:${currency.network}` : null;
+    },
+    () => {
+      setRecipientExtraId('');
+    },
+  ));
+
+  createEffect(on(
+    () => {
+      const currency = fromCurrency();
+      return currency ? `${currency.ticker}:${currency.network}` : null;
+    },
+    () => {
+      setRefundExtraId('');
+    },
+  ));
+
+  createEffect(() => {
+    if (!refundAddress().trim()) {
+      setRefundExtraId('');
+    }
+  });
+
+  const recipientExtraIdField = createMemo(() => {
+    const descriptor = recipientExtraIdDescriptor();
+    const currency = toCurrency();
+
+    if (!descriptor || !currency) {
+      return null;
+    }
+
+    return {
+      value: recipientExtraId(),
+      label: descriptor.label,
+      placeholder: `Enter the ${descriptor.label.toLowerCase()} for ${currency.ticker} on ${currency.network}`,
+      helper:
+        descriptor.kind === 'destination_tag'
+          ? 'Enter the numeric destination tag required by the receiving wallet.'
+          : `Required for payouts to ${currency.ticker} on ${currency.network}.`,
+      error: recipientExtraIdError(),
+      required: true,
+      inputMode: descriptor.kind === 'destination_tag' ? 'numeric' : 'text',
+      onInput: setRecipientExtraId,
+    };
+  });
+
+  const refundExtraIdField = createMemo(() => {
+    const descriptor = refundExtraIdDescriptor();
+    const currency = fromCurrency();
+    const hasRefundAddress = Boolean(refundAddress().trim());
+
+    if (!descriptor || !currency) {
+      return null;
+    }
+
+    return {
+      value: refundExtraId(),
+      label: `${descriptor.label} for refund`,
+      placeholder: `Optional ${descriptor.label.toLowerCase()} for the refund address`,
+      helper: hasRefundAddress
+        ? descriptor.kind === 'destination_tag'
+          ? 'Optional. Leave blank to let the backend use 0 as the refund destination tag.'
+          : 'Optional. Leave blank to let the backend use 0 as the refund memo.'
+        : 'Enter a refund address first if you also need to supply a refund memo or tag.',
+      error: refundExtraIdError(),
+      required: false,
+      disabled: !hasRefundAddress,
+      inputMode: descriptor.kind === 'destination_tag' ? 'numeric' : 'text',
+      onInput: setRefundExtraId,
+    };
+  });
 
   const executionRequest = createMemo<CreateSwapRequest | null>(() => {
     const from = fromCurrency();
@@ -249,7 +354,9 @@ function SwapModal(props: SwapModalProps) {
       amount: nextAmount,
       provider: selectedRate.provider,
       recipient_address: address,
+      recipient_extra_id: normalizedRecipientExtraId(),
       refund_address: refund || undefined,
+      refund_extra_id: refund ? normalizedRefundExtraId() : undefined,
       rate_type: selectedRate.rate_type,
     };
   });
@@ -270,7 +377,9 @@ function SwapModal(props: SwapModalProps) {
       request.amount,
       request.provider,
       request.recipient_address,
+      request.recipient_extra_id ?? '',
       request.refund_address ?? '',
+      request.refund_extra_id ?? '',
       request.rate_type ?? '',
     ].join('|');
   });
@@ -344,6 +453,8 @@ function SwapModal(props: SwapModalProps) {
     return Boolean(
       quoteDiscovery.selectedRate() &&
         addressValidation.isValid() &&
+        !recipientExtraIdError() &&
+        !refundExtraIdError() &&
         !quoteDiscovery.loading() &&
         !quoteDiscovery.refreshing(),
     );
@@ -374,12 +485,20 @@ function SwapModal(props: SwapModalProps) {
       return 'Validate the destination address before continuing.';
     }
 
+    if (recipientExtraIdError()) {
+      return recipientExtraIdError()!;
+    }
+
+    if (refundExtraIdError()) {
+      return refundExtraIdError()!;
+    }
+
     return 'Address is validated and the selected exchange is ready to confirm.';
   });
 
   const receiveValue = createMemo(() => {
     if (receiveAmount() !== null && toCurrency()) {
-      return `${format.number(receiveAmount()!, 6)} ${toCurrency()!.ticker}`;
+      return format.number(receiveAmount()!, 6);
     }
 
     if (quoteDiscovery.loading() || quoteDiscovery.refreshing()) {
@@ -532,7 +651,13 @@ function SwapModal(props: SwapModalProps) {
   const handleCreateSwap = async () => {
     const request = executionRequest();
 
-    if (!request || swap.creating() || createdSwap()) {
+    if (
+      !request ||
+      swap.creating() ||
+      createdSwap() ||
+      recipientExtraIdError() ||
+      refundExtraIdError()
+    ) {
       return;
     }
 
@@ -606,7 +731,6 @@ function SwapModal(props: SwapModalProps) {
                   value={amount()}
                   onInput={handleAmountInput}
                 />
-                <span class="swap-coin__amount-code">{displayFromCurrency().ticker}</span>
               </div>
             </div>
             <div class="swap-coin__meta">
@@ -817,7 +941,9 @@ function SwapModal(props: SwapModalProps) {
                 currency={toCurrency()}
                 refundCurrency={fromCurrency()}
                 address={recipientAddress()}
+                recipientExtraIdField={recipientExtraIdField()}
                 refundAddress={refundAddress()}
+                refundExtraIdField={refundExtraIdField()}
                 onInput={value => setRecipientAddress(value)}
                 onRefundInput={value => setRefundAddress(value)}
                 validation={addressValidation}
