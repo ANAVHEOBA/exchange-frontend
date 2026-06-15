@@ -8,6 +8,7 @@ import { CACHE_CONFIG } from '../../config/cache';
 import { swapCache } from '../cache/memoryCache';
 import { logger } from '../../utils/logger';
 import type {
+  CreateDonationSwapRequest,
   CreateSwapRequest,
   CreateSwapResponse,
   HistoryQuery,
@@ -72,6 +73,10 @@ const getSwapHistory = async (
 export const swapService = {
   createSwap(request: CreateSwapRequest): Promise<CreateSwapResponse> {
     return swapApi.create(request);
+  },
+
+  createDonationSwap(request: CreateDonationSwapRequest): Promise<CreateSwapResponse> {
+    return swapApi.createDonation(request);
   },
 
   createSandboxSwap(request: CreateSwapRequest): Promise<CreateSwapResponse> {

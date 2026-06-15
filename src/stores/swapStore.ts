@@ -7,6 +7,7 @@ import { createMemo, createSignal } from 'solid-js';
 import { swapService } from '../services/swap/swapService';
 import { logger } from '../utils/logger';
 import type {
+  CreateDonationSwapRequest,
   CreateSwapRequest,
   CreateSwapResponse,
   FiltersApplied,
@@ -72,18 +73,20 @@ const mergeHistory = (current: SwapSummary[], incoming: SwapSummary[]): SwapSumm
 };
 
 const runCreateSwap = async (
-  request: CreateSwapRequest,
-  mode: 'standard' | 'sandbox' | 'payment',
+  request: CreateSwapRequest | CreateDonationSwapRequest,
+  mode: 'standard' | 'sandbox' | 'payment' | 'donation',
 ): Promise<CreateSwapResponse> => {
   clearError();
   setCreating(true);
 
   try {
     const response = mode === 'sandbox'
-      ? await swapService.createSandboxSwap(request)
-      : mode === 'payment'
-        ? await swapService.createPaymentSwap(request)
-        : await swapService.createSwap(request);
+      ? await swapService.createSandboxSwap(request as CreateSwapRequest)
+      : mode === 'donation'
+        ? await swapService.createDonationSwap(request as CreateDonationSwapRequest)
+        : mode === 'payment'
+        ? await swapService.createPaymentSwap(request as CreateSwapRequest)
+        : await swapService.createSwap(request as CreateSwapRequest);
 
     setActiveSwap(response);
     return response;
@@ -229,6 +232,7 @@ export const swapStore = {
   error,
 
   createSwap: (request: CreateSwapRequest) => runCreateSwap(request, 'standard'),
+  createDonationSwap: (request: CreateDonationSwapRequest) => runCreateSwap(request, 'donation'),
   createSandboxSwap: (request: CreateSwapRequest) => runCreateSwap(request, 'sandbox'),
   createPaymentSwap: (request: CreateSwapRequest) => runCreateSwap(request, 'payment'),
   loadSwapStatus,

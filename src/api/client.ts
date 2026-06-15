@@ -146,6 +146,24 @@ export class ApiClient {
     return headers;
   }
 
+  private buildRequestURL(endpoint: string, params?: Record<string, any>): string {
+    const basePath = `${this.baseURL.replace(/\/$/, '')}${endpoint}`;
+    const baseOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const url = /^https?:\/\//i.test(basePath)
+      ? new URL(basePath)
+      : new URL(basePath, baseOrigin);
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.append(key, String(value));
+        }
+      });
+    }
+
+    return url.toString();
+  }
+
   private async fetchWithTimeout(
     url: string,
     options: RequestInit,
@@ -238,18 +256,10 @@ export class ApiClient {
 
   async get<T>(endpoint: string, params?: Record<string, any>, requestOptions?: RequestOptions): Promise<T> {
     const startTime = performance.now();
-    const url = new URL(`${this.baseURL}${endpoint}`);
-    
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
+    const url = this.buildRequestURL(endpoint, params);
 
     try {
-      const response = await this.fetchWithTimeout(url.toString(), {
+      const response = await this.fetchWithTimeout(url, {
         method: 'GET',
         headers: this.buildHeaders(),
       }, requestOptions);
@@ -284,7 +294,7 @@ export class ApiClient {
 
   async post<T>(endpoint: string, body?: any, requestOptions?: RequestOptions): Promise<T> {
     const startTime = performance.now();
-    const url = `${this.baseURL}${endpoint}`;
+    const url = this.buildRequestURL(endpoint);
 
     try {
       const response = await this.fetchWithTimeout(url, {

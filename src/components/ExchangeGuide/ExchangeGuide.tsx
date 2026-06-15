@@ -16,8 +16,8 @@ const highlights = [
     eyebrow: "Amazing Crypto Tools",
     title: "A wider crypto toolkit in one place.",
     description:
-      "Swap into your preferred assets, handle crypto payments, or use connected services like prepaid cards and gift cards without bouncing between separate products.",
-    points: ["Swaps", "Payments", "Prepaid and gift card flows"],
+      "Swap into your preferred assets, compare live routes quickly, and use connected services like prepaid cards and gift cards without bouncing between separate products.",
+    points: ["Swaps", "Live route comparison", "Prepaid and gift card flows"],
   },
 ];
 
@@ -26,7 +26,7 @@ const steps = [
     number: "01",
     title: "Build your route",
     description:
-      "Choose standard swap or payment mode, select the two assets, enter the amount, and start the exchange. The platform checks the market and gathers live quotes for you.",
+      "Choose the two assets, enter the amount you want to send, and start the exchange. The platform checks the market and gathers live quotes for you.",
   },
   {
     number: "02",

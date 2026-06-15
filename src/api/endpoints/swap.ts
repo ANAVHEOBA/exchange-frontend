@@ -8,17 +8,42 @@
 import { apiClient } from '../client';
 import { API_CONFIG } from '../../config/api';
 import type { 
+  CreateDonationSwapRequest,
   CreateSwapRequest, 
   CreateSwapResponse, 
+  DonationRatesQuery,
+  DonationTargetResponse,
   SwapStatusResponse,
   HistoryQuery,
   HistoryResponse 
 } from '../../types/swap';
+import type { RatesResponse } from '../../types/rate';
 
 const createSwapRequest = async (
   request: CreateSwapRequest
 ): Promise<CreateSwapResponse> => {
   return apiClient.post<CreateSwapResponse>(API_CONFIG.endpoints.swapCreate, request);
+};
+
+const createDonationSwapRequest = async (
+  request: CreateDonationSwapRequest,
+): Promise<CreateSwapResponse> => {
+  return apiClient.post<CreateSwapResponse>(API_CONFIG.endpoints.donationCreate, request);
+};
+
+const getDonationTargetRequest = async (): Promise<DonationTargetResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<DonationTargetResponse>(API_CONFIG.endpoints.donationTarget)
+  );
+};
+
+const getDonationRatesRequest = async (
+  query: DonationRatesQuery,
+  signal?: AbortSignal,
+): Promise<RatesResponse> => {
+  return apiClient.withRetry(() =>
+    apiClient.get<RatesResponse>(API_CONFIG.endpoints.donationRates, query, { signal })
+  );
 };
 
 const getSwapStatusRequest = async (
@@ -45,6 +70,11 @@ export const swapApi = {
   create: createSwapRequest,
 
   /**
+   * Create a donation-mode swap routed to the hosted target
+   */
+  createDonation: createDonationSwapRequest,
+
+  /**
    * Create a swap in sandbox mode
    */
   createSandbox(request: CreateSwapRequest): Promise<CreateSwapResponse> {
@@ -63,6 +93,16 @@ export const swapApi = {
    * Returns current status and details of an existing swap
    */
   getStatus: getSwapStatusRequest,
+
+  /**
+   * Load the hosted donation target metadata
+   */
+  getDonationTarget: getDonationTargetRequest,
+
+  /**
+   * Fetch rates for the hosted donation target
+   */
+  getDonationRates: getDonationRatesRequest,
 
   /**
    * Get swap history with keyset pagination
@@ -92,5 +132,6 @@ export const swapApi = {
 };
 
 export const createSwap = swapApi.create;
+export const createDonationSwap = swapApi.createDonation;
 export const getSwapStatus = swapApi.getStatus;
 export const getSwapHistory = swapApi.getHistory;

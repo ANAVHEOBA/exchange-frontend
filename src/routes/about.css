@@ -1,0 +1,229 @@
+.about-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.about-page__shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.about-page__hero {
+  padding: 40px 0 36px;
+}
+
+.about-page__eyebrow,
+.about-page__section-kicker {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.about-page__hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.98fr);
+  gap: 28px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.about-page__title {
+  color: #0f172a;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.06em;
+}
+
+.about-page__copy {
+  max-width: 760px;
+  margin-top: 1rem;
+  color: #526075;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.about-page__contact-card,
+.about-page__summary-card,
+.about-page__principle {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+}
+
+.about-page__contact-card {
+  margin-top: 1.5rem;
+  padding: 10px;
+  border-radius: 28px;
+}
+
+.about-page__contact-row {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 18px;
+  padding: 14px;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.about-page__contact-row + .about-page__contact-row {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.about-page__contact-row:hover {
+  background: #f8fbff;
+  transform: translateY(-1px);
+}
+
+.about-page__contact-label {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-page__contact-value {
+  display: block;
+  margin-top: 6px;
+  color: #1d4ed8;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.about-page__section {
+  padding: 18px 0 72px;
+}
+
+.about-page__section--accent {
+  padding-top: 8px;
+}
+
+.about-page__section-header {
+  max-width: 760px;
+}
+
+.about-page__section-title {
+  margin-top: 0.9rem;
+  color: #0f172a;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.about-page__section-copy {
+  margin-top: 1rem;
+  color: #526075;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.about-page__principles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.about-page__principles--compact {
+  margin-bottom: 24px;
+}
+
+.about-page__principle {
+  padding: 22px;
+  border-radius: 24px;
+}
+
+.about-page__principle-title {
+  color: #0f172a;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.about-page__principle-copy {
+  margin-top: 0.8rem;
+  color: #526075;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
+.about-page__summary-card {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 28px;
+}
+
+.about-page__section + .about-page__section .about-page__shell {
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
+}
+
+.about-page__summary-card p {
+  color: #526075;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.about-page__summary-card p + p {
+  margin-top: 1rem;
+}
+
+@media (max-width: 960px) {
+  .about-page__hero-grid,
+  .about-page__principles {
+    grid-template-columns: 1fr;
+  }
+
+  .about-page__hero {
+    padding-top: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-page__shell {
+    padding: 0 20px;
+  }
+
+  .about-page__hero {
+    padding: 24px 0 20px;
+  }
+
+  .about-page__copy,
+  .about-page__section-copy,
+  .about-page__summary-card p,
+  .about-page__principle-copy {
+    font-size: 0.95rem;
+  }
+
+  .about-page__contact-card,
+  .about-page__principle,
+  .about-page__summary-card {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .about-page__section {
+    padding-bottom: 48px;
+  }
+}
+
+@media (max-width: 420px) {
+  .about-page__shell {
+    padding: 0 16px;
+  }
+
+  .about-page__title {
+    line-height: 1;
+  }
+
+  .about-page__copy,
+  .about-page__section-copy,
+  .about-page__summary-card p {
+    line-height: 1.65;
+  }
+}

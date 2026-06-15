@@ -17,7 +17,6 @@ import type { CreateSwapRequest, CreateSwapResponse, SwapStatusResponse } from '
 import { format } from '../../utils/format';
 import './SwapModal.css';
 
-type SwapMode = 'standard' | 'payment';
 type SelectorTarget = 'from' | 'to' | null;
 type CurrencyDisplay = Pick<Currency, 'name' | 'ticker' | 'network' | 'image'>;
 type SwapModalLayout = 'card' | 'page';
@@ -150,7 +149,6 @@ function SwapModal(props: SwapModalProps) {
   const layout = createMemo<SwapModalLayout>(() => props.layout ?? 'card');
   const isPageLayout = createMemo(() => layout() === 'page');
 
-  const [mode, setMode] = createSignal<SwapMode>('standard');
   const [selectorTarget, setSelectorTarget] = createSignal<SelectorTarget>(null);
   const [selectedRateType, setSelectedRateType] = createSignal<RateType>(
     props.initialRateType ?? 'floating',
@@ -569,10 +567,6 @@ function SwapModal(props: SwapModalProps) {
   });
 
   const modeDescription = createMemo(() => {
-    if (mode() === 'payment') {
-      return 'Payment targets an exact receive amount. This flow is not wired yet in the current backend.';
-    }
-
     return 'Standard uses the amount you send and then lets you compare live exchange routes.';
   });
 
@@ -662,9 +656,7 @@ function SwapModal(props: SwapModalProps) {
     }
 
     try {
-      const response =
-        mode() === 'payment' ? await swap.createPayment(request) : await swap.create(request);
-
+      const response = await swap.create(request);
       setCreatedSwapId(response.swap_id);
       setCreatedExecutionKey(executionKey());
       navigate(`/swap/${response.swap_id}`);
@@ -787,23 +779,10 @@ function SwapModal(props: SwapModalProps) {
         </div>
 
         <div class="swap-card__footer">
-          <div class="swap-mode-toggle" aria-label="Swap mode">
-            <button
-              class="swap-mode-toggle__button"
-              classList={{ active: mode() === 'standard' }}
-              onClick={() => setMode('standard')}
-              type="button"
-            >
+          <div class="swap-mode-indicator" aria-label="Active swap mode">
+            <div class="swap-mode-indicator__pill">
               Standard
-            </button>
-            <button
-              class="swap-mode-toggle__button swap-mode-toggle__button--disabled"
-              classList={{ active: mode() === 'payment' }}
-              disabled
-              type="button"
-            >
-              Payment
-            </button>
+            </div>
           </div>
 
           <div class="swap-mode-note">{modeDescription()}</div>

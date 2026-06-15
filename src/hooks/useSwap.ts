@@ -4,7 +4,7 @@
  */
 
 import { swapStore } from '../stores/swapStore';
-import type { CreateSwapRequest, HistoryQuery } from '../types/swap';
+import type { CreateDonationSwapRequest, CreateSwapRequest, HistoryQuery } from '../types/swap';
 
 export function useSwap() {
   return {
@@ -23,6 +23,7 @@ export function useSwap() {
     error: swapStore.error,
 
     create: (request: CreateSwapRequest) => swapStore.createSwap(request),
+    createDonation: (request: CreateDonationSwapRequest) => swapStore.createDonationSwap(request),
     createSandbox: (request: CreateSwapRequest) => swapStore.createSandboxSwap(request),
     createPayment: (request: CreateSwapRequest) => swapStore.createPaymentSwap(request),
     loadStatus: (swapId: string) => swapStore.loadSwapStatus(swapId),

@@ -3,10 +3,16 @@
  * Centralized configuration for API endpoints and settings
  */
 
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const configuredWsURL = import.meta.env.VITE_WS_URL;
+const derivedWsURL = apiBaseURL.startsWith('http://') || apiBaseURL.startsWith('https://')
+  ? apiBaseURL.replace(/^http/, 'ws')
+  : '';
+
 export const API_CONFIG = {
   // Base URLs
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-  wsURL: import.meta.env.VITE_WS_URL || 'ws://localhost:3000',
+  baseURL: apiBaseURL,
+  wsURL: configuredWsURL !== undefined ? configuredWsURL : derivedWsURL,
   
   // Timeouts
   timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
@@ -19,6 +25,9 @@ export const API_CONFIG = {
     pairs: '/swap/pairs',
     rates: '/swap/rates',
     estimate: '/swap/estimate',
+    donationTarget: '/swap/donation/target',
+    donationRates: '/swap/donation/rates',
+    donationCreate: '/swap/donation/create',
     swapCreate: '/swap/create',
     swapStatus: '/swap',
     swapHistory: '/swap/history',

@@ -33,6 +33,36 @@ export interface CreateSwapRequest {
   min_kycrating?: string;      // Minimum KYC rating: A, B, C, or D (optional)
 }
 
+export interface DonationTargetResponse {
+  label?: string;              // Human label for the hosted donation target
+  to: string;                  // Destination currency ticker
+  network_to: string;          // Destination network
+  recipient_address: string;   // Fixed hosted donation address
+  recipient_extra_id?: string; // Optional memo / extra ID
+}
+
+export interface DonationRatesQuery {
+  from: string;                // Source currency ticker
+  network_from: string;        // Source network
+  amount: number;              // Donation amount
+  rate_type?: RateType;        // Preferred rate type
+  provider?: string;           // Optional provider filter
+  min_kycrating?: string;      // Minimum privacy / KYC rating
+}
+
+export interface CreateDonationSwapRequest {
+  trade_id?: string;           // ID from /swap/donation/rates
+  from: string;                // Source currency ticker
+  network_from: string;        // Source network
+  amount: number;              // Donation amount
+  provider: string;            // Chosen provider
+  refund_address?: string;     // Optional refund address
+  refund_extra_id?: string;    // Optional refund memo / extra ID
+  rate_type?: RateType;        // Fixed or floating
+  sandbox?: boolean;           // Sandbox mode
+  min_kycrating?: string;      // Minimum privacy / KYC rating
+}
+
 export interface CreateSwapResponse {
   swap_id: string;             // Internal swap ID
   provider: string;            // Exchange provider name

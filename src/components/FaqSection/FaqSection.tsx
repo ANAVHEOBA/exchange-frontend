@@ -40,10 +40,10 @@ const faqItems: FaqItem[] = [
     ],
   },
   {
-    question: "What are the Swap Modes?",
+    question: "What swap flow is live today?",
     paragraphs: [
-      "Standard Mode is the regular swap flow. You enter the amount you plan to send, choose the asset you want to receive, and compare the best floating and fixed rates from partner exchanges.",
-      "Payment Mode is built for invoice-style payments. Instead of choosing the amount you will send, you choose the exact amount that must be received and then select which coin you want to pay with. This mode focuses on fixed-rate providers that support payout precision.",
+      "Standard Mode is the live swap flow on the current public interface. You enter the amount you plan to send, choose the asset you want to receive, and compare the best floating and fixed rates from partner exchanges.",
+      "Invoice-style payment flows are not active on the public swap widget right now, so the interface only shows the standard route-building flow.",
       "The Buy/Sell tab is used for fiat on-ramp and off-ramp flows. It can have fewer crypto options available than swap mode, but users can sometimes bridge through a more common asset if they need to reach a less common coin.",
     ],
   },

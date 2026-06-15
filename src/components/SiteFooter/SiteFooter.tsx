@@ -33,7 +33,7 @@ export default function SiteFooter() {
           <a class="site-footer__brand-link" href="/">
             Assetar.app
           </a>
-          <p class="site-footer__copyright">© Reta Development Assets LLC</p>
+          <p class="site-footer__copyright">© Assetar Exchange</p>
         </div>
 
         <div class="site-footer__column">

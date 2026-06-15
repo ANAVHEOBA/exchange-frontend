@@ -8,6 +8,8 @@ export interface QuoteDiscoveryPanelProps {
   quote: QuoteDiscoveryController;
   rateType: RateType;
   idleMessage?: string;
+  title?: string;
+  subtitle?: string;
   onRateTypeChange?: (rateType: RateType) => void;
 }
 
@@ -66,10 +68,14 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
   return (
     <section class="quote-discovery">
       <div class="quote-discovery__header">
-        <div class="quote-discovery__title">Choose your Exchange and Rate</div>
-        <div class="quote-discovery__guarantee">
-          All transactions are covered by the Trocador Guarantee
+        <div class="quote-discovery__title">
+          {props.title ?? 'Choose your Exchange and Rate'}
         </div>
+        <Show when={props.subtitle !== ''}>
+          <div class="quote-discovery__guarantee">
+            {props.subtitle ?? 'All transactions are covered by the Trocador Guarantee'}
+          </div>
+        </Show>
       </div>
 
       <div class="quote-discovery__tabs" role="tablist" aria-label="Rate type">
