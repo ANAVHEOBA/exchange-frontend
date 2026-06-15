@@ -256,10 +256,11 @@ const loadEstimate = async (
     } catch (estimateError) {
       if (requestId === activeEstimateRequestId && !isAbortError(estimateError)) {
         setError(estimateError);
-        logger.warn('Estimate request failed', estimateError);
-
         if (isNoRouteError(estimateError)) {
+          logger.debug('No estimate route available for current pair', estimateError);
           cancelRatesWork();
+        } else {
+          logger.warn('Estimate request failed', estimateError);
         }
       }
 
@@ -326,7 +327,11 @@ const loadRates = async (
     } catch (ratesError) {
       if (requestId === activeRatesRequestId && !isAbortError(ratesError)) {
         setError(ratesError);
-        logger.error('Failed to fetch live rates', ratesError);
+        if (isNoRouteError(ratesError)) {
+          logger.debug('No live rates available for current pair', ratesError);
+        } else {
+          logger.error('Failed to fetch live rates', ratesError);
+        }
       }
 
       return null;

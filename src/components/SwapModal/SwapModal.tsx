@@ -160,6 +160,79 @@ const matchesCurrency = (
   return tickerMatches && networkMatches;
 };
 
+const DEFAULT_NETWORK_PREFERENCES: Record<string, string[]> = {
+  btc: ['Mainnet', 'Lightning'],
+  xmr: ['Mainnet'],
+  eth: ['ERC20', 'Mainnet', 'Arbitrum', 'Optimism', 'base', 'BEP20'],
+  bnb: ['BEP20', 'Mainnet'],
+  ada: ['Mainnet'],
+  ltc: ['Mainnet', 'Lightning'],
+  xrp: ['Mainnet'],
+  sol: ['Mainnet', 'SOL'],
+  trx: ['TRC20', 'Mainnet'],
+  usdt: ['ERC20', 'TRC20', 'BEP20', 'Polygon', 'SOL'],
+  usdc: ['ERC20', 'Base', 'Optimism', 'Polygon', 'BSC', 'SOL'],
+};
+
+const preferenceScoreForCurrency = (currency: Currency): number => {
+  const ticker = currency.ticker.toLowerCase();
+  const preferredNetworks = DEFAULT_NETWORK_PREFERENCES[ticker] ?? [];
+  const preferredIndex = preferredNetworks.findIndex(network => {
+    return currency.network.toLowerCase() === network.toLowerCase();
+  });
+
+  let score = 0;
+
+  if (preferredIndex >= 0) {
+    score += 200 - preferredIndex * 20;
+  }
+
+  if (currency.network.toLowerCase() === 'mainnet') {
+    score += 120;
+  }
+
+  if (!currency.name.includes('(')) {
+    score += 20;
+  }
+
+  const name = currency.name.toLowerCase();
+  if (name.includes('wrapped') || name.includes('wrappped')) {
+    score -= 80;
+  }
+
+  return score;
+};
+
+const findPreferredCurrency = (
+  currencies: Currency[],
+  ticker?: string,
+  network?: string,
+  exclude?: Currency | null,
+): Currency | null => {
+  if (!ticker) {
+    return null;
+  }
+
+  const exact = currencies.find(currency => matchesCurrency(currency, ticker, network));
+  if (exact && !isSameCurrency(exact, exclude ?? null)) {
+    return exact;
+  }
+
+  const candidates = currencies
+    .filter(currency => currency.ticker.toLowerCase() === ticker.toLowerCase())
+    .filter(currency => !isSameCurrency(currency, exclude ?? null))
+    .sort((left, right) => {
+      const scoreDifference = preferenceScoreForCurrency(right) - preferenceScoreForCurrency(left);
+      if (scoreDifference !== 0) {
+        return scoreDifference;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+
+  return candidates[0] ?? null;
+};
+
 function SwapModal(props: SwapModalProps) {
   const { currencies } = useCurrencies();
   const swap = useSwap();
@@ -189,12 +262,14 @@ function SwapModal(props: SwapModalProps) {
     }
 
     const currentFrom = fromCurrency();
-    const preferredFrom = available.find(currency => {
-      return matchesCurrency(currency, props.initialFromTicker, props.initialFromNetwork);
-    });
+    const preferredFrom = findPreferredCurrency(
+      available,
+      props.initialFromTicker,
+      props.initialFromNetwork,
+    );
     const fallbackFrom =
       preferredFrom ??
-      available.find(currency => currency.ticker.toLowerCase() === 'btc') ??
+      findPreferredCurrency(available, 'btc') ??
       available[0];
     const nextFrom = currentFrom ?? fallbackFrom;
 
@@ -203,17 +278,16 @@ function SwapModal(props: SwapModalProps) {
     }
 
     if (!toCurrency()) {
-      const preferredTo = available.find(currency => {
-        return matchesCurrency(currency, props.initialToTicker, props.initialToNetwork);
-      });
+      const preferredTo = findPreferredCurrency(
+        available,
+        props.initialToTicker,
+        props.initialToNetwork,
+        nextFrom,
+      );
       const fallbackTo =
         preferredTo ??
-        available.find(currency => {
-          return currency.ticker.toLowerCase() === 'xmr' && !isSameCurrency(currency, nextFrom);
-        }) ??
-        available.find(currency => {
-          return currency.ticker.toLowerCase() === 'usdt' && !isSameCurrency(currency, nextFrom);
-        }) ??
+        findPreferredCurrency(available, 'xmr', undefined, nextFrom) ??
+        findPreferredCurrency(available, 'usdt', undefined, nextFrom) ??
         available.find(currency => !isSameCurrency(currency, nextFrom)) ??
         nextFrom;
 
