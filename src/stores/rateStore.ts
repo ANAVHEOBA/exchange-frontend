@@ -58,6 +58,24 @@ const isAbortError = (error: unknown): boolean => {
   );
 };
 
+const isNoRouteError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const status = 'status' in error ? Number((error as { status?: number }).status) : null;
+  const message =
+    'message' in error ? String((error as { message?: string }).message ?? '').toLowerCase() : '';
+
+  return (
+    status === 404 ||
+    message.includes('no resulting quote') ||
+    message.includes('trading pair not available') ||
+    message.includes('pair not available') ||
+    message.includes('no route')
+  );
+};
+
 const [currentQuery, setCurrentQuery] = createSignal<RatesQuery | null>(null);
 const [selectedProvider, setSelectedProvider] = createSignal<string | null>(null);
 const [ratesResponse, setRatesResponse] = createSignal<RatesResponse | null>(null);
@@ -236,8 +254,13 @@ const loadEstimate = async (
 
       return response;
     } catch (estimateError) {
-      if (!isAbortError(estimateError)) {
+      if (requestId === activeEstimateRequestId && !isAbortError(estimateError)) {
+        setError(estimateError);
         logger.warn('Estimate request failed', estimateError);
+
+        if (isNoRouteError(estimateError)) {
+          cancelRatesWork();
+        }
       }
 
       return null;
