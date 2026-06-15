@@ -2,6 +2,7 @@ import { For, Show, createEffect, createSignal, onCleanup, onMount } from 'solid
 import './Header.css';
 
 const LANGUAGE_STORAGE_KEY = 'assetar.language';
+const LANGUAGE_COOKIE_KEY = 'assetar.locale';
 
 const navItems = [
   { label: 'How it works', href: '#how-it-works' },
@@ -10,26 +11,26 @@ const navItems = [
 ];
 
 const languageOptions = [
-  { code: 'EN', lang: 'en', flag: '/country/USAFlagIcon.jpg' },
-  { code: 'BR', lang: 'pt-BR', flag: '/country/BrazilFlagIcon.jpg' },
-  { code: 'DE', lang: 'de', flag: '/country/GermanyFlagIcon.jpg' },
-  { code: 'EL', lang: 'el', flag: '/country/GreekFlagIcon.png' },
-  { code: 'ES', lang: 'es', flag: '/country/SpainFlagIcon.jpg' },
-  { code: 'FR', lang: 'fr', flag: '/country/FranceFlagIcon.jpg' },
-  { code: 'HI', lang: 'hi', flag: '/country/HindiFlagIcon.png' },
-  { code: 'HR', lang: 'hr', flag: '/country/CroatiaFlagIcon.png' },
-  { code: 'HU', lang: 'hu', flag: '/country/HungaryFlagIcon.png' },
-  { code: 'ID', lang: 'id', flag: '/country/IndonesiaFlagIcon.png' },
-  { code: 'IT', lang: 'it', flag: '/country/ItalyFlagIcon.png' },
-  { code: 'KO', lang: 'ko', flag: '/country/KoreaFlagIcon.png' },
-  { code: 'NL', lang: 'nl', flag: '/country/DutchFlagIcon.jpg' },
-  { code: 'PL', lang: 'pl', flag: '/country/PolandFlagIcon.jpg' },
-  { code: 'RU', lang: 'ru', flag: '/country/RussiaFlagIcon.webp' },
-  { code: 'SR', lang: 'sr', flag: '/country/SerbianFlagIcon.png' },
-  { code: 'SV', lang: 'sv', flag: '/country/SwedenFlagIcon.png' },
-  { code: 'TH', lang: 'th', flag: '/country/ThailandFlagIcon.png' },
-  { code: 'TR', lang: 'tr', flag: '/country/TurkeyFlagIcon.png' },
-  { code: 'ZH', lang: 'zh', flag: '/country/ChineseFlagIcon.png' },
+  { code: 'EN', lang: 'en', label: 'English', flag: '/country/USAFlagIcon.jpg' },
+  { code: 'BR', lang: 'pt-BR', label: 'Português', flag: '/country/BrazilFlagIcon.jpg' },
+  { code: 'DE', lang: 'de', label: 'Deutsch', flag: '/country/GermanyFlagIcon.jpg' },
+  { code: 'EL', lang: 'el', label: 'Ελληνικά', flag: '/country/GreekFlagIcon.png' },
+  { code: 'ES', lang: 'es', label: 'Español', flag: '/country/SpainFlagIcon.jpg' },
+  { code: 'FR', lang: 'fr', label: 'Français', flag: '/country/FranceFlagIcon.jpg' },
+  { code: 'HI', lang: 'hi', label: 'हिन्दी', flag: '/country/HindiFlagIcon.png' },
+  { code: 'HR', lang: 'hr', label: 'Hrvatski', flag: '/country/CroatiaFlagIcon.png' },
+  { code: 'HU', lang: 'hu', label: 'Magyar', flag: '/country/HungaryFlagIcon.png' },
+  { code: 'ID', lang: 'id', label: 'Indonesia', flag: '/country/IndonesiaFlagIcon.png' },
+  { code: 'IT', lang: 'it', label: 'Italiano', flag: '/country/ItalyFlagIcon.png' },
+  { code: 'KO', lang: 'ko', label: '한국어', flag: '/country/KoreaFlagIcon.png' },
+  { code: 'NL', lang: 'nl', label: 'Nederlands', flag: '/country/DutchFlagIcon.jpg' },
+  { code: 'PL', lang: 'pl', label: 'Polski', flag: '/country/PolandFlagIcon.jpg' },
+  { code: 'RU', lang: 'ru', label: 'Русский', flag: '/country/RussiaFlagIcon.webp' },
+  { code: 'SR', lang: 'sr', label: 'Српски', flag: '/country/SerbianFlagIcon.png' },
+  { code: 'SV', lang: 'sv', label: 'Svenska', flag: '/country/SwedenFlagIcon.png' },
+  { code: 'TH', lang: 'th', label: 'ไทย', flag: '/country/ThailandFlagIcon.png' },
+  { code: 'TR', lang: 'tr', label: 'Türkçe', flag: '/country/TurkeyFlagIcon.png' },
+  { code: 'ZH', lang: 'zh', label: '中文', flag: '/country/ChineseFlagIcon.png' },
 ] as const;
 
 export default function Header() {
@@ -43,9 +44,19 @@ export default function Header() {
   onMount(() => {
     try {
       const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      const cookieLanguage = document.cookie
+        .split(';')
+        .map(part => part.trim())
+        .find(part => part.startsWith(`${LANGUAGE_COOKIE_KEY}=`))
+        ?.split('=')[1];
       const browserLanguage = window.navigator.language;
       const matchedLanguage = languageOptions.find(option => {
-        return option.lang === savedLanguage || option.code.toLowerCase() === savedLanguage?.toLowerCase();
+        return (
+          option.lang === savedLanguage ||
+          option.code.toLowerCase() === savedLanguage?.toLowerCase() ||
+          option.lang === cookieLanguage ||
+          option.code.toLowerCase() === cookieLanguage?.toLowerCase()
+        );
       }) ?? languageOptions.find(option => {
         return browserLanguage.toLowerCase().startsWith(option.lang.toLowerCase());
       });
@@ -88,6 +99,10 @@ export default function Header() {
       } catch {
         // Ignore storage access restrictions and keep the in-memory choice.
       }
+    }
+
+    if (typeof document !== 'undefined') {
+      document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language.lang)}; Path=/; Max-Age=31536000; SameSite=Lax`;
     }
   });
 
@@ -135,6 +150,10 @@ export default function Header() {
 
               <Show when={languageMenuOpen()}>
                 <div class="site-language__menu" role="menu" aria-label="Languages">
+                  <div class="site-language__menu-header">
+                    <div class="site-language__menu-title">Language</div>
+                    <div class="site-language__menu-copy">Choose interface language</div>
+                  </div>
                   <For each={languageOptions}>
                     {option => (
                       <button
@@ -147,7 +166,10 @@ export default function Header() {
                         type="button"
                       >
                         <img class="site-language__flag" src={option.flag} alt="" aria-hidden="true" />
-                        <span class="site-language__code">{option.code}</span>
+                        <span class="site-language__option-copy">
+                          <span class="site-language__code">{option.code}</span>
+                          <span class="site-language__label">{option.label}</span>
+                        </span>
                       </button>
                     )}
                   </For>

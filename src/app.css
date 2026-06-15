@@ -22,10 +22,27 @@
   font-display: swap;
 }
 
+:root {
+  color-scheme: light;
+  --assetar-background: #ffffff;
+  --assetar-surface: #f9fafb;
+  --assetar-surface-hover: #f3f4f6;
+  --assetar-surface-soft: #fbfcff;
+  --assetar-border: #e5e7eb;
+  --assetar-border-soft: #f3f4f6;
+  --assetar-text: #18181b;
+  --assetar-text-muted: #6b7280;
+  --assetar-blue: #1652f0;
+  --assetar-blue-hover: #0c3ec1;
+  --assetar-overlay: rgba(244, 246, 250, 0.78);
+  --assetar-shadow-soft: 0 18px 44px rgba(15, 23, 42, 0.06);
+  --assetar-shadow-panel: 0 24px 56px rgba(15, 23, 42, 0.08);
+}
+
 body {
   font-family: "DM Sans", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--assetar-background);
+  color: var(--assetar-text);
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -49,21 +66,21 @@ html {
 main {
   padding: 0;
   margin: 0;
-  background: #ffffff;
+  background: var(--assetar-background);
   overflow-x: hidden;
 }
 
 a {
-  color: #2563eb;
+  color: var(--assetar-blue);
   text-decoration: none;
 }
 
 a:hover {
-  color: #1d4ed8;
+  color: var(--assetar-blue-hover);
 }
 
 h1 {
-  color: #0f172a;
+  color: var(--assetar-text);
   font-size: clamp(2.6rem, 6vw, 4.5rem);
   font-weight: 700;
   line-height: 1.02;

@@ -1,10 +1,8 @@
 .donation-widget {
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--assetar-border);
   border-radius: 32px;
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+  background: var(--assetar-background);
+  box-shadow: var(--assetar-shadow-panel);
   padding: 24px;
 }
 
@@ -40,10 +38,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border: 1px solid #dbe7ff;
+  border: 1px solid var(--assetar-border);
   border-radius: 20px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--assetar-surface);
+  color: var(--assetar-blue);
   padding: 14px 16px;
 }
 
@@ -57,10 +55,10 @@
 .donation-widget__retry,
 .donation-widget__copy,
 .donation-widget__selector-close {
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--assetar-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #1d4ed8;
+  background: var(--assetar-background);
+  color: var(--assetar-blue);
   font-size: 0.86rem;
   font-weight: 700;
   padding: 0.72rem 1rem;
@@ -70,15 +68,15 @@
 .donation-widget__retry:hover,
 .donation-widget__copy:hover,
 .donation-widget__selector-close:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--assetar-surface);
+  border-color: #bfdbfe;
 }
 
 .donation-widget__target-card,
 .donation-widget__route-card {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--assetar-border);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--assetar-background);
   padding: 18px;
 }
 
@@ -112,8 +110,8 @@
   display: block;
   margin-top: 1rem;
   border-radius: 18px;
-  background: #eff6ff;
-  color: #1e3a8a;
+  background: var(--assetar-surface);
+  color: var(--assetar-text);
   font-size: 0.9rem;
   line-height: 1.7;
   overflow-wrap: anywhere;
@@ -124,7 +122,7 @@
 .donation-widget__route-copy,
 .donation-widget__note {
   margin-top: 0.85rem;
-  color: #526075;
+  color: var(--assetar-text-muted);
   font-size: 0.95rem;
   line-height: 1.7;
 }
@@ -144,9 +142,9 @@
 
 .donation-widget__currency-trigger,
 .donation-widget__amount-shell {
-  border: 1px solid rgba(148, 163, 184, 0.32);
+  border: 1px solid var(--assetar-border);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--assetar-background);
   min-height: 58px;
 }
 
@@ -205,8 +203,8 @@
 .donation-widget__submit {
   width: 100%;
   border-radius: 18px;
-  background: linear-gradient(135deg, #2563eb, #0f4fd1);
-  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.26);
+  background: var(--assetar-blue);
+  box-shadow: 0 18px 32px rgba(22, 82, 240, 0.18);
   color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
@@ -216,7 +214,8 @@
 
 .donation-widget__submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 22px 44px rgba(37, 99, 235, 0.3);
+  background: var(--assetar-blue-hover);
+  box-shadow: 0 20px 36px rgba(22, 82, 240, 0.22);
 }
 
 .donation-widget__submit:disabled {
@@ -233,8 +232,7 @@
 .donation-widget__selector-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.46);
-  backdrop-filter: blur(10px);
+  background: var(--assetar-overlay);
 }
 
 .donation-widget__selector-panel {
@@ -242,10 +240,10 @@
   width: min(720px, calc(100vw - 28px));
   max-height: calc(100vh - 60px);
   margin: 30px auto;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--assetar-border);
   border-radius: 28px;
   background: #ffffff;
-  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+  box-shadow: var(--assetar-shadow-panel);
   overflow: hidden;
 }
 

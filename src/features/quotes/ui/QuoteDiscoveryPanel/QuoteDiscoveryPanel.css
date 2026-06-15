@@ -30,18 +30,18 @@
 
 .quote-discovery__tab {
   min-height: 40px;
-  border: 1px solid #dbe3ee;
+  border: 1px solid var(--assetar-border);
   border-radius: 999px;
-  background: #f8fafc;
-  color: #526075;
+  background: var(--assetar-surface);
+  color: var(--assetar-text-muted);
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
 }
 
 .quote-discovery__tab--active {
-  background: #0f172a;
-  border-color: #0f172a;
+  background: var(--assetar-blue);
+  border-color: var(--assetar-blue);
   color: #ffffff;
 }
 
@@ -154,11 +154,11 @@
 }
 
 .quote-discovery__row:hover {
-  background: #f8fbff;
+  background: var(--assetar-surface);
 }
 
 .quote-discovery__row--selected {
-  background: #eff6ff;
+  background: #eef4ff;
 }
 
 .quote-discovery__exchange {
@@ -186,8 +186,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #0f172a;
-  color: #ffffff;
+  background: #eef4ff;
+  color: var(--assetar-blue);
   font-size: 0.78rem;
   font-weight: 700;
 }

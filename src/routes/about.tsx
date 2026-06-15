@@ -1,24 +1,24 @@
 import { Title } from '@solidjs/meta';
+import { Show, createSignal, onMount } from 'solid-js';
+import { swapApi } from '../api/endpoints/swap';
+import type { DonationTargetResponse } from '../types/swap';
 import Header from '../components/Header/Header';
 import DonationWidget from '../components/DonationWidget/DonationWidget';
+import FaqSection from '../components/FaqSection/FaqSection';
+import PartnersWall from '../components/PartnersWall/PartnersWall';
 import SiteFooter from '../components/SiteFooter/SiteFooter';
 import './about.css';
 
-const operatingPrinciples = [
+const reassurancePanels = [
   {
-    title: 'Direct provider settlement',
+    title: 'Simple and reliable',
     copy:
-      'The hosted donation flow stays non-custodial. The selected provider receives the deposit and settles the payout directly to the fixed donation wallet.',
+      'At no extra cost, Assetar compares live partner routes so donors can choose a provider with clear pricing, visible payout estimates, and a non-custodial settlement flow.',
   },
   {
-    title: 'Server-controlled target',
+    title: 'Amazing crypto tools',
     copy:
-      'The recipient wallet is configured on the backend, not supplied by the browser. That keeps the donation target consistent and prevents client-side tampering.',
-  },
-  {
-    title: 'Route visibility before checkout',
-    copy:
-      'Donors can compare live providers, floating or fixed routes, and expected receive amounts before generating deposit instructions.',
+      'Swap discovery, hosted donations, recipient validation, and live status tracking all stay inside the same interface so donors move from quote to settlement without juggling multiple dashboards.',
   },
 ];
 
@@ -26,17 +26,17 @@ const donationSteps = [
   {
     title: 'Choose the asset you want to send',
     copy:
-      'Pick any supported source currency, set the amount, and compare provider routes without leaving the Assetar interface.',
+      'Pick the coin and network you want to send, set the amount, and let Assetar query live partner routes for the hosted donation target.',
   },
   {
     title: 'Select the route that fits',
     copy:
-      'Choose between floating and fixed routes, review the provider and expected receive amount, then generate the checkout.',
+      'Review floating and fixed quotes, compare providers, and choose the route that fits your timing and expected receive amount.',
   },
   {
     title: 'Send once and track live',
     copy:
-      'After checkout is created, the status page keeps the deposit instructions, expiry window, and provider updates visible in real time.',
+      'Create the checkout, send the deposit once, and keep the status page open to follow confirmations, expiry, and provider updates in real time.',
   },
 ];
 
@@ -45,7 +45,24 @@ const contactPoints = [
   { label: 'General', href: 'mailto:mail@assetar.app', value: 'mail@assetar.app' },
 ];
 
+const trustBadges = [
+  'Non-custodial routing',
+  'Hosted donation target',
+  'Live provider comparison',
+];
+
 export default function About() {
+  const [donationTarget, setDonationTarget] = createSignal<DonationTargetResponse | null>(null);
+
+  onMount(async () => {
+    try {
+      const target = await swapApi.getDonationTarget();
+      setDonationTarget(target);
+    } catch (error) {
+      console.error('Failed to load hosted donation target', error);
+    }
+  });
+
   return (
     <main class="about-page">
       <Title>About | ASSETAR</Title>
@@ -53,19 +70,25 @@ export default function About() {
 
       <section class="about-page__hero">
         <div class="about-page__shell">
-          <div class="about-page__eyebrow">About</div>
           <div class="about-page__hero-grid">
-            <div class="about-page__intro">
-              <h1 class="about-page__title">Assetar Exchange routes donations through live swap providers.</h1>
+            <article class="about-page__hero-card" id="about">
+              <p class="about-page__eyebrow">About Assetar</p>
+              <h1 class="about-page__title">Private swap routing with a hosted donation flow.</h1>
               <p class="about-page__copy">
-                Assetar is built to compare live partner routes, keep swap execution non-custodial,
-                and move donors from quote discovery to a real checkout with less friction.
+                Assetar compares live swap providers, surfaces the routes that are actually available,
+                and keeps the execution flow non-custodial from quote discovery through settlement.
               </p>
               <p class="about-page__copy">
-                The hosted donation flow uses a server-controlled target wallet. Donors choose what they
-                want to send, the selected provider receives the deposit, and the payout settles directly
-                to the configured donation address.
+                The donation flow uses a server-controlled target wallet. Donors only choose the asset
+                they want to send, the provider they prefer, and the amount. The selected provider then
+                settles directly to the hosted donation address configured on the backend.
               </p>
+
+              <div class="about-page__badge-row" aria-label="Assetar route highlights">
+                {trustBadges.map(badge => (
+                  <span class="about-page__badge">{badge}</span>
+                ))}
+              </div>
 
               <div class="about-page__contact-card" aria-label="Support contacts">
                 {contactPoints.map(contact => (
@@ -75,66 +98,82 @@ export default function About() {
                   </a>
                 ))}
               </div>
+
+              <div class="about-page__address-card">
+                <p class="about-page__address-kicker">Hosted donation address</p>
+                <Show
+                  when={donationTarget()}
+                  fallback={<p class="about-page__address-loading">Loading current donation target...</p>}
+                >
+                  {target => {
+                    const hostedTarget = target();
+
+                    return (
+                      <>
+                        <p class="about-page__address-network">
+                          {hostedTarget.label ?? 'Donation target'} ·{' '}
+                          {hostedTarget.to.toUpperCase()} / {hostedTarget.network_to}
+                        </p>
+                        <p class="about-page__address-value">{hostedTarget.recipient_address}</p>
+                        <Show when={hostedTarget.recipient_extra_id}>
+                          <p class="about-page__address-extra">
+                            Extra ID: {hostedTarget.recipient_extra_id}
+                          </p>
+                        </Show>
+                      </>
+                    );
+                  }}
+                </Show>
+              </div>
+            </article>
+
+            <div class="about-page__widget-panel">
+              <DonationWidget />
             </div>
-
-            <DonationWidget />
           </div>
         </div>
       </section>
 
-      <section class="about-page__section">
-        <div class="about-page__shell">
-          <div class="about-page__section-header">
+      <section class="about-page__story">
+        <div class="about-page__shell about-page__story-grid">
+          <article class="about-page__info-panel">
+            <p class="about-page__section-kicker">Why Assetar</p>
+            <h2 class="about-page__panel-title">A cleaner route from donor intent to settled payout.</h2>
+
+            <div class="about-page__panel-stack">
+              {reassurancePanels.map(panel => (
+                <div class="about-page__panel-card">
+                  <h3 class="about-page__panel-card-title">{panel.title}</h3>
+                  <p class="about-page__panel-card-copy">{panel.copy}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article class="about-page__steps-panel" id="how-it-works">
             <p class="about-page__section-kicker">How It Works</p>
-            <h2 class="about-page__section-title">The donation route stays visible from quote to payout.</h2>
-            <p class="about-page__section-copy">
-              The flow mirrors the standard swap mechanics, but the destination wallet is hosted on the
-              backend so the browser only needs to choose the send side, amount, and provider route.
-            </p>
-          </div>
+            <h2 class="about-page__panel-title">Swap in 3 simple steps.</h2>
 
-          <div class="about-page__principles">
-            {donationSteps.map(step => (
-              <article class="about-page__principle">
-                <h3 class="about-page__principle-title">{step.title}</h3>
-                <p class="about-page__principle-copy">{step.copy}</p>
-              </article>
-            ))}
-          </div>
+            <div class="about-page__steps">
+              {donationSteps.map((step, index) => (
+                <div class="about-page__step">
+                  <div class="about-page__step-index">
+                    {index + 1}
+                    <span class="about-page__step-index-dot">.</span>
+                  </div>
+                  <div class="about-page__step-body">
+                    <h3 class="about-page__step-title">{step.title}</h3>
+                    <p class="about-page__step-copy">{step.copy}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
       </section>
 
-      <section class="about-page__section about-page__section--accent">
-        <div class="about-page__shell">
-          <div class="about-page__section-header">
-            <p class="about-page__section-kicker">Operating Principles</p>
-            <h2 class="about-page__section-title">Software layer first, custody never.</h2>
-          </div>
-
-          <div class="about-page__principles about-page__principles--compact">
-            {operatingPrinciples.map(principle => (
-              <article class="about-page__principle">
-                <h3 class="about-page__principle-title">{principle.title}</h3>
-                <p class="about-page__principle-copy">{principle.copy}</p>
-              </article>
-            ))}
-          </div>
-
-          <div class="about-page__summary-card">
-            <p>
-              Assetar Exchange does not take custody of the funds moving through this donation flow.
-              It acts as the route-comparison and workflow layer that helps donors discover providers,
-              generate a checkout, and track the transaction after deposit.
-            </p>
-            <p>
-              That makes the product best understood as hosted swap software with a fixed donation target,
-              not a custodial wallet or centralized venue. The partner provider remains the direct
-              counterparty processing the deposit and payout.
-            </p>
-          </div>
-        </div>
-      </section>
-
+      <FaqSection />
+      <PartnersWall />
       <SiteFooter />
     </main>
   );
