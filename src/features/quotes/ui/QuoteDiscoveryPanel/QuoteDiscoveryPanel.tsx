@@ -40,6 +40,35 @@ const formatSpread = (spread?: number): string => {
   return format.percent(spread, 1, false);
 };
 
+const isNoRouteError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const status = 'status' in error ? Number((error as { status?: number }).status) : null;
+  const message = 'message' in error ? String((error as { message?: string }).message ?? '').toLowerCase() : '';
+
+  return (
+    status === 404 ||
+    message.includes('no resulting quote') ||
+    message.includes('trading pair not available') ||
+    message.includes('pair not available') ||
+    message.includes('no route')
+  );
+};
+
+const describeError = (error: unknown): string => {
+  if (isNoRouteError(error)) {
+    return 'No provider route is available for this pair right now.';
+  }
+
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message?: string }).message ?? 'Failed to load live quotes.');
+  }
+
+  return 'Failed to load live quotes.';
+};
+
 export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
   const currentRate = createMemo(() => props.quote.selectedRate() ?? props.quote.bestRate());
   const currentEstimate = createMemo(() => props.quote.estimate());
@@ -189,7 +218,7 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
 
         <Match when={props.quote.error()}>
           <div class="quote-discovery__state quote-discovery__state--error">
-            {String(props.quote.error() ?? 'Failed to load live quotes.')}
+            {describeError(props.quote.error())}
           </div>
         </Match>
 

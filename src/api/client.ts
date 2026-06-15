@@ -254,6 +254,27 @@ export class ApiClient {
     throw error;
   }
 
+  private isNonRetryableServerError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') {
+      return false;
+    }
+
+    const apiError = error as ApiError;
+    const status = apiError.status;
+    const message = String(apiError.message ?? '').toLowerCase();
+
+    if (status !== 502 && status !== 503) {
+      return false;
+    }
+
+    return (
+      message.includes('no resulting quote') ||
+      message.includes('trading pair not available') ||
+      message.includes('pair not available') ||
+      message.includes('no route')
+    );
+  }
+
   async get<T>(endpoint: string, params?: Record<string, any>, requestOptions?: RequestOptions): Promise<T> {
     const startTime = performance.now();
     const url = this.buildRequestURL(endpoint, params);
@@ -356,6 +377,10 @@ export class ApiClient {
           if (status && status >= 400 && status < 500) {
             throw error;
           }
+        }
+
+        if (this.isNonRetryableServerError(error)) {
+          throw error;
         }
 
         // Wait before retrying (exponential backoff)

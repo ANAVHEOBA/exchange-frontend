@@ -125,6 +125,24 @@ const getPrivacyTooltip = (label?: string | null): string | null => {
   return PRIVACY_TOOLTIPS[label.toUpperCase()] ?? 'Provider-specific verification may still apply.';
 };
 
+const isNoRouteError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const status = 'status' in error ? Number((error as { status?: number }).status) : null;
+  const message =
+    'message' in error ? String((error as { message?: string }).message ?? '').toLowerCase() : '';
+
+  return (
+    status === 404 ||
+    message.includes('no resulting quote') ||
+    message.includes('trading pair not available') ||
+    message.includes('pair not available') ||
+    message.includes('no route')
+  );
+};
+
 const matchesCurrency = (
   currency: Currency,
   ticker?: string,
@@ -522,6 +540,10 @@ function SwapModal(props: SwapModalProps) {
     if (!quoteDiscovery.selectedRate()) {
       if (quoteDiscovery.estimate()) {
         if (quoteDiscovery.error()) {
+          if (isNoRouteError(quoteDiscovery.error())) {
+            return `Preview ready, but no live ${selectedRateType()} route is available for the current pair.`;
+          }
+
           return 'Estimate is ready, but the live provider check is delayed.';
         }
 
@@ -529,7 +551,11 @@ function SwapModal(props: SwapModalProps) {
       }
 
       if (quoteDiscovery.error()) {
-        return null;
+        if (isNoRouteError(quoteDiscovery.error())) {
+          return `No ${selectedRateType()} route available for the current pair.`;
+        }
+
+        return 'Live route lookup failed. Try another pair or try again shortly.';
       }
 
       return `No ${selectedRateType()} route available for the current pair.`;
@@ -545,6 +571,10 @@ function SwapModal(props: SwapModalProps) {
 
     if (quoteDiscovery.refreshing()) {
       return 'Refreshing routes...';
+    }
+
+    if (isNoRouteError(quoteDiscovery.error())) {
+      return 'No route available';
     }
 
     if (detailsOpen()) {
