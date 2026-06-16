@@ -2,6 +2,7 @@ import { For, Match, Show, Switch, createMemo, createSignal } from 'solid-js';
 import { CURATED_CURRENCY_SECTIONS, type CuratedCurrencyDefinition } from '../../model/curatedCurrencySections';
 import { useCurrencySelector } from '../../model';
 import type { Currency } from '../../../../types/currency';
+import { getCurrencyIconFallback, getCurrencyIconSrc } from '../../../../utils/currencyIcon';
 import './CurrencySelector.css';
 
 export interface CurrencySelectorProps {
@@ -60,11 +61,11 @@ const renderCurrencyItem = (
       onClick={() => onSelect(currency)}
     >
       <img
-        src={currency.image}
+        src={getCurrencyIconSrc(currency)}
         alt={currency.name}
         class="currency-selector__icon"
         onError={event => {
-          (event.currentTarget as HTMLImageElement).src = '/favicon.ico';
+          (event.currentTarget as HTMLImageElement).src = getCurrencyIconFallback(currency.ticker);
         }}
       />
       <div class="currency-selector__info">

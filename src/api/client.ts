@@ -232,7 +232,7 @@ export class ApiClient {
 
       try {
         const errorData = await response.json();
-        error.message = errorData.message || error.message;
+        error.message = errorData.message || errorData.error || error.message;
         error.code = errorData.code;
       } catch {
         // Response is not JSON, use default error

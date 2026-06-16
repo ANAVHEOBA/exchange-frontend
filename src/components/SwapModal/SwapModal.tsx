@@ -14,6 +14,7 @@ import { useSwap } from '../../hooks/useSwap';
 import type { Currency } from '../../types/currency';
 import type { RateType } from '../../types/rate';
 import type { CreateSwapRequest, CreateSwapResponse, SwapStatusResponse } from '../../types/swap';
+import { getCurrencyIconFallback, getCurrencyIconSrc } from '../../utils/currencyIcon';
 import { format } from '../../utils/format';
 import './SwapModal.css';
 
@@ -769,16 +770,24 @@ function SwapModal(props: SwapModalProps) {
     }
   };
 
-  const coinImage = (currency: Currency | null) => {
-    return currency?.image || '/favicon.ico';
-  };
-
   const displayFromCurrency = createMemo<CurrencyDisplay>(() => {
-    return fromCurrency() ?? DEFAULT_SEND_DISPLAY;
+    const currency = fromCurrency();
+    const fallback = currency ?? DEFAULT_SEND_DISPLAY;
+
+    return {
+      ...fallback,
+      image: getCurrencyIconSrc(currency, fallback.ticker),
+    };
   });
 
   const displayToCurrency = createMemo<CurrencyDisplay>(() => {
-    return toCurrency() ?? DEFAULT_RECEIVE_DISPLAY;
+    const currency = toCurrency();
+    const fallback = currency ?? DEFAULT_RECEIVE_DISPLAY;
+
+    return {
+      ...fallback,
+      image: getCurrencyIconSrc(currency, fallback.ticker),
+    };
   });
 
   return (
@@ -807,7 +816,9 @@ function SwapModal(props: SwapModalProps) {
                   alt={displayFromCurrency().name}
                   class="swap-coin__icon"
                   onError={event => {
-                    (event.currentTarget as HTMLImageElement).src = coinImage(fromCurrency());
+                    (event.currentTarget as HTMLImageElement).src = getCurrencyIconFallback(
+                      fromCurrency()?.ticker ?? displayFromCurrency().ticker,
+                    );
                   }}
                 />
                 <div class="swap-coin__identity">
@@ -859,7 +870,9 @@ function SwapModal(props: SwapModalProps) {
                   alt={displayToCurrency().name}
                   class="swap-coin__icon"
                   onError={event => {
-                    (event.currentTarget as HTMLImageElement).src = coinImage(toCurrency());
+                    (event.currentTarget as HTMLImageElement).src = getCurrencyIconFallback(
+                      toCurrency()?.ticker ?? displayToCurrency().ticker,
+                    );
                   }}
                 />
                 <div class="swap-coin__identity">
@@ -957,7 +970,9 @@ function SwapModal(props: SwapModalProps) {
                         alt={displayFromCurrency().name}
                         class="swap-selection__summary-icon"
                         onError={event => {
-                          (event.currentTarget as HTMLImageElement).src = coinImage(fromCurrency());
+                          (event.currentTarget as HTMLImageElement).src = getCurrencyIconFallback(
+                            fromCurrency()?.ticker ?? displayFromCurrency().ticker,
+                          );
                         }}
                       />
                       <div>
@@ -988,7 +1003,9 @@ function SwapModal(props: SwapModalProps) {
                         alt={displayToCurrency().name}
                         class="swap-selection__summary-icon"
                         onError={event => {
-                          (event.currentTarget as HTMLImageElement).src = coinImage(toCurrency());
+                          (event.currentTarget as HTMLImageElement).src = getCurrencyIconFallback(
+                            toCurrency()?.ticker ?? displayToCurrency().ticker,
+                          );
                         }}
                       />
                       <div>

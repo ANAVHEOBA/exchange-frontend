@@ -1,14 +1,9 @@
 import { For, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { useLocale } from '../../i18n/locale';
 import './Header.css';
 
 const LANGUAGE_STORAGE_KEY = 'assetar.language';
 const LANGUAGE_COOKIE_KEY = 'assetar.locale';
-
-const navItems = [
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'FAQ', href: '#faq' },
-  { label: 'Contact', href: '#contact' },
-];
 
 const languageOptions = [
   { code: 'EN', lang: 'en', label: 'English', flag: '/country/USAFlagIcon.jpg' },
@@ -34,6 +29,7 @@ const languageOptions = [
 ] as const;
 
 export default function Header() {
+  const { setLocale, t } = useLocale();
   const [selectedLanguage, setSelectedLanguage] = createSignal(languageOptions[0]);
   const [languageMenuOpen, setLanguageMenuOpen] = createSignal(false);
   const [accountMenuOpen, setAccountMenuOpen] = createSignal(false);
@@ -93,6 +89,8 @@ export default function Header() {
       document.documentElement.lang = language.lang;
     }
 
+    setLocale(language.lang);
+
     if (typeof window !== 'undefined') {
       try {
         window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language.lang);
@@ -120,7 +118,11 @@ export default function Header() {
         </a>
 
         <nav class="site-nav" aria-label="Primary">
-          {navItems.map(item => (
+          {[
+            { label: t('header.howItWorks'), href: '#how-it-works' },
+            { label: t('header.faq'), href: '#faq' },
+            { label: t('header.contact'), href: '#contact' },
+          ].map(item => (
             <a href={item.href} class="site-nav__link">
               {item.label}
             </a>
@@ -135,7 +137,7 @@ export default function Header() {
                 onClick={() => setLanguageMenuOpen(current => !current)}
                 type="button"
                 aria-expanded={languageMenuOpen()}
-                aria-label="Select language"
+                aria-label={t('header.selectLanguage')}
               >
                 <img class="site-language__flag" src={selectedLanguage().flag} alt="" aria-hidden="true" />
                 <span class="site-language__code">{selectedLanguage().code}</span>
@@ -149,10 +151,10 @@ export default function Header() {
               </button>
 
               <Show when={languageMenuOpen()}>
-                <div class="site-language__menu" role="menu" aria-label="Languages">
+                <div class="site-language__menu" role="menu" aria-label={t('header.language')}>
                   <div class="site-language__menu-header">
-                    <div class="site-language__menu-title">Language</div>
-                    <div class="site-language__menu-copy">Choose interface language</div>
+                    <div class="site-language__menu-title">{t('header.language')}</div>
+                    <div class="site-language__menu-copy">{t('header.chooseLanguage')}</div>
                   </div>
                   <For each={languageOptions}>
                     {option => (
@@ -183,7 +185,7 @@ export default function Header() {
                 onClick={() => setAccountMenuOpen(current => !current)}
                 type="button"
                 aria-expanded={accountMenuOpen()}
-                aria-label="Open account menu"
+                aria-label={t('header.openAccountMenu')}
               >
                 <svg class="site-account__icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -203,10 +205,10 @@ export default function Header() {
               <Show when={accountMenuOpen()}>
                 <div class="site-account__menu" role="menu" aria-label="Account">
                   <a class="site-account__menu-link" href="/login">
-                    Login
+                    {t('header.login')}
                   </a>
                   <a class="site-account__menu-link" href="/about">
-                    About
+                    {t('header.about')}
                   </a>
                 </div>
               </Show>

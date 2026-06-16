@@ -1,56 +1,58 @@
+import { useLocale } from "../../i18n/locale";
 import "./ExchangeGuide.css";
 
 export interface ExchangeGuideProps {
   ctaHref?: string;
 }
 
-const highlights = [
-  {
-    eyebrow: "Simple and Reliable",
-    title: "Best-rate routing without touching your funds.",
-    description:
-      "At no extra cost, we find the best rates and redirect your order to known and reliable instant exchanges. We do not interfere with your transaction, and we never have access to your funds.",
-    points: ["No custody", "Known exchange partners", "Support when a transaction needs help"],
-  },
-  {
-    eyebrow: "Amazing Crypto Tools",
-    title: "A wider crypto toolkit in one place.",
-    description:
-      "Swap into your preferred assets, compare live routes quickly, and use connected services like prepaid cards and gift cards without bouncing between separate products.",
-    points: ["Swaps", "Live route comparison", "Prepaid and gift card flows"],
-  },
-];
-
-const steps = [
-  {
-    number: "01",
-    title: "Build your route",
-    description:
-      "Choose the two assets, enter the amount you want to send, and start the exchange. The platform checks the market and gathers live quotes for you.",
-  },
-  {
-    number: "02",
-    title: "Pick the rate",
-    description:
-      "Compare the available options, choose your preferred rate, then enter the wallet address where you want to receive funds. For multi-network coins, confirm the correct network before continuing.",
-  },
-  {
-    number: "03",
-    title: "Send and track",
-    description:
-      "We generate the deposit address and exact amount to send. Complete the transfer from your wallet, then follow the status on the same screen until the destination crypto arrives.",
-  },
-];
-
 export default function ExchangeGuide(props: ExchangeGuideProps) {
+  const { t } = useLocale();
+  const highlights = [
+    {
+      eyebrow: t('guide.highlightOneEyebrow'),
+      title: t('guide.highlightOneTitle'),
+      description: t('guide.highlightOneDescription'),
+      points: [
+        t('guide.highlightOnePointOne'),
+        t('guide.highlightOnePointTwo'),
+        t('guide.highlightOnePointThree'),
+      ],
+    },
+    {
+      eyebrow: t('guide.highlightTwoEyebrow'),
+      title: t('guide.highlightTwoTitle'),
+      description: t('guide.highlightTwoDescription'),
+      points: [
+        t('guide.highlightTwoPointOne'),
+        t('guide.highlightTwoPointTwo'),
+        t('guide.highlightTwoPointThree'),
+      ],
+    },
+  ];
+  const steps = [
+    {
+      number: "01",
+      title: t('guide.stepOneTitle'),
+      description: t('guide.stepOneDescription'),
+    },
+    {
+      number: "02",
+      title: t('guide.stepTwoTitle'),
+      description: t('guide.stepTwoDescription'),
+    },
+    {
+      number: "03",
+      title: t('guide.stepThreeTitle'),
+      description: t('guide.stepThreeDescription'),
+    },
+  ];
+
   return (
     <section class="exchange-guide" id="how-it-works">
       <div class="exchange-guide__intro">
-        <div class="exchange-guide__kicker">How It Works</div>
-        <h2 class="exchange-guide__title">Simple routes. Reliable partners. Clear next steps.</h2>
-        <p class="exchange-guide__summary">
-          The section below explains the trust model, the extra tools around swaps, and the exact three-step flow a user follows from quote discovery to final delivery.
-        </p>
+        <div class="exchange-guide__kicker">{t('guide.kicker')}</div>
+        <h2 class="exchange-guide__title">{t('guide.title')}</h2>
+        <p class="exchange-guide__summary">{t('guide.summary')}</p>
       </div>
 
       <div class="exchange-guide__highlights">
@@ -71,12 +73,12 @@ export default function ExchangeGuide(props: ExchangeGuideProps) {
 
       <div class="exchange-guide__steps-header">
         <div>
-          <p class="exchange-guide__steps-kicker">Swap In 3 Simple Steps</p>
-          <h3 class="exchange-guide__steps-title">From quote to payout without the guesswork.</h3>
+          <p class="exchange-guide__steps-kicker">{t('guide.stepsKicker')}</p>
+          <h3 class="exchange-guide__steps-title">{t('guide.stepsTitle')}</h3>
         </div>
 
         <a class="exchange-guide__cta" href={props.ctaHref ?? "#swap"}>
-          Start exchange
+          {t('guide.cta')}
         </a>
       </div>
 

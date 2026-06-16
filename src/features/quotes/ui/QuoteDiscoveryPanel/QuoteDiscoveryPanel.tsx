@@ -134,7 +134,15 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
         </Match>
 
         <Match when={props.quote.loading() && !currentEstimate()}>
-          <div class="quote-discovery__state">Loading provider routes...</div>
+          <div class="quote-discovery__state quote-discovery__state--loading">
+            <div class="quote-discovery__spinner" aria-hidden="true" />
+            <strong class="quote-discovery__loading-copy">
+              {props.rateType === 'fixed' ? 'Checking fixed routes...' : 'Checking floating routes...'}
+            </strong>
+            <span class="quote-discovery__loading-subcopy">
+              Comparing live providers for the current pair.
+            </span>
+          </div>
         </Match>
 
         <Match when={providerCount() > 0}>

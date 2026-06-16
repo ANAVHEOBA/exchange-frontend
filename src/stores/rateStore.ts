@@ -410,12 +410,27 @@ const runFetch = (
   forceRefresh: boolean = false,
   skipDebounce: boolean = false,
 ) => {
+  const queryKey = buildQueryKey(query);
+  const previousQueryKey = currentQueryKey();
+
   setSelectedProvider(query.provider ?? null);
   setCurrentQuery({ ...query });
   setError(null);
 
-  void loadEstimate(query, forceRefresh);
-  scheduleRatesLoad(query, forceRefresh, skipDebounce);
+  if (forceRefresh || previousQueryKey !== queryKey) {
+    cancelRatesWork();
+  }
+
+  void (async () => {
+    const estimateResult = await loadEstimate(query, forceRefresh);
+    const latestQuery = currentQuery();
+
+    if (!estimateResult || !latestQuery || buildQueryKey(latestQuery) !== queryKey) {
+      return;
+    }
+
+    scheduleRatesLoad(query, forceRefresh, skipDebounce);
+  })();
 };
 
 const rates = createMemo(() => filteredRates());
