@@ -3,6 +3,7 @@
  * Base HTTP client with retry logic, error handling, and performance metrics
  */
 
+import { getRequestEvent } from 'solid-js/web';
 import { API_CONFIG } from '../config/api';
 import { getIntlLocale, resolveClientPreferredLocale } from '../i18n/config';
 import type { ApiError } from '../types/api';
@@ -210,7 +211,26 @@ export class ApiClient {
 
   private buildRequestURL(endpoint: string, params?: Record<string, any>): string {
     const basePath = `${this.baseURL.replace(/\/$/, '')}${endpoint}`;
-    const baseOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const requestEvent = typeof window === 'undefined' ? getRequestEvent() : undefined;
+    let baseOrigin = 'http://localhost';
+
+    if (typeof window !== 'undefined') {
+      baseOrigin = window.location.origin;
+    } else if (requestEvent) {
+      try {
+        baseOrigin = new URL(requestEvent.request.url).origin;
+      } catch {
+        const forwardedProto = requestEvent.request.headers.get('x-forwarded-proto') || 'https';
+        const forwardedHost =
+          requestEvent.request.headers.get('x-forwarded-host') ||
+          requestEvent.request.headers.get('host');
+
+        if (forwardedHost) {
+          baseOrigin = `${forwardedProto}://${forwardedHost}`;
+        }
+      }
+    }
+
     const url = /^https?:\/\//i.test(basePath)
       ? new URL(basePath)
       : new URL(basePath, baseOrigin);
