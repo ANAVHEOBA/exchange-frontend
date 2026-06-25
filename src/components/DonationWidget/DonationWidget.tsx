@@ -21,6 +21,7 @@ import type {
   DonationTargetResponse,
 } from '../../types/swap';
 import { createDebouncedAccessor } from '../../utils/createDebouncedAccessor';
+import { useLocale } from '../../i18n/locale';
 import { format } from '../../utils/format';
 import { swapApi } from '../../api/endpoints/swap';
 import './DonationWidget.css';
@@ -104,6 +105,7 @@ const pickDefaultSourceCurrency = (
 };
 
 export default function DonationWidget() {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const swap = useSwap();
   const { currencies } = useCurrencies();
@@ -302,7 +304,7 @@ export default function DonationWidget() {
     const source = fromCurrency();
 
     if (!source) {
-      return 'Choose an asset';
+      return t('donation.chooseAsset');
     }
 
     return `${source.name} (${source.ticker.toUpperCase()} • ${source.network})`;
@@ -312,7 +314,7 @@ export default function DonationWidget() {
     const donationTarget = target();
 
     if (!donationTarget) {
-      return 'Hosted donation target';
+      return t('about.donationAddress');
     }
 
     return donationTarget.label ?? `${donationTarget.to.toUpperCase()} Donations`;
@@ -406,24 +408,20 @@ export default function DonationWidget() {
   return (
     <section class="donation-widget" aria-label="Hosted donation flow">
       <div class="donation-widget__header">
-        <div class="donation-widget__eyebrow">Donate by Swap</div>
-        <h2 class="donation-widget__title">Send any supported asset. The donation settles to a fixed wallet.</h2>
-        <p class="donation-widget__copy">
-          Choose the coin you want to send, compare live partner routes, and generate a checkout.
-          The selected provider receives your deposit and sends the donation directly to the hosted
-          target address.
-        </p>
+        <div class="donation-widget__eyebrow">{t('donation.eyebrow')}</div>
+        <h2 class="donation-widget__title">{t('donation.title')}</h2>
+        <p class="donation-widget__copy">{t('donation.copy')}</p>
       </div>
 
       <Show when={targetLoading()}>
-        <div class="donation-widget__state">Loading donation target...</div>
+        <div class="donation-widget__state">{t('donation.loadingTarget')}</div>
       </Show>
 
       <Show when={targetError()}>
         <div class="donation-widget__state donation-widget__state--error">
           <span>{targetError()}</span>
           <button class="donation-widget__retry" onClick={() => void loadTarget()} type="button">
-            Retry
+            {t('donation.retry')}
           </button>
         </div>
       </Show>
@@ -440,7 +438,7 @@ export default function DonationWidget() {
                   </div>
                 </div>
                 <button class="donation-widget__copy" onClick={handleCopyAddress} type="button">
-                  {copiedAddress() ? 'Copied' : 'Copy Address'}
+                  {copiedAddress() ? t('donation.copied') : t('donation.copyAddress')}
                 </button>
               </div>
 
@@ -448,14 +446,14 @@ export default function DonationWidget() {
 
               <Show when={donationTarget().recipient_extra_id}>
                 <div class="donation-widget__memo">
-                  Extra ID: <strong>{donationTarget().recipient_extra_id}</strong>
+                  {t('donation.extraId')}: <strong>{donationTarget().recipient_extra_id}</strong>
                 </div>
               </Show>
             </div>
 
             <div class="donation-widget__controls">
               <div class="donation-widget__field-group">
-                <label class="donation-widget__field-label">You send</label>
+                <label class="donation-widget__field-label">{t('donation.youSend')}</label>
                 <button
                   class="donation-widget__currency-trigger"
                   onClick={() => setSelectorOpen(true)}
@@ -474,7 +472,7 @@ export default function DonationWidget() {
 
               <div class="donation-widget__field-group donation-widget__field-group--amount">
                 <label class="donation-widget__field-label" for="donation-amount">
-                  Amount
+                  {t('donation.amount')}
                 </label>
                 <div class="donation-widget__amount-shell">
                   <input
@@ -498,15 +496,15 @@ export default function DonationWidget() {
             <QuoteDiscoveryPanel
               quote={quoteController}
               rateType={selectedRateType()}
-              title="Choose a provider route"
-              subtitle="Providers deliver the donation directly to the hosted wallet. This page stays in the Assetar flow."
-              idleMessage="Choose a send asset and enter a donation amount to load live routes."
+              subtitle={t('donation.chooseProviderSubtitle')}
+              idleMessage={t('donation.chooseProviderIdle')}
+              title={t('donation.chooseProviderTitle')}
               onRateTypeChange={setSelectedRateType}
             />
 
             <Show when={selectedRouteDescription()}>
               <div class="donation-widget__route-card">
-                <div class="donation-widget__route-label">Selected route</div>
+                <div class="donation-widget__route-label">{t('donation.selectedRoute')}</div>
                 <div class="donation-widget__route-copy">{selectedRouteDescription()}</div>
               </div>
             </Show>
@@ -521,8 +519,7 @@ export default function DonationWidget() {
 
             <div class="donation-widget__footer">
               <p class="donation-widget__note">
-                Checkout opens on the live transaction status page, where deposit instructions,
-                expiry, and provider status are tracked in real time.
+                {t('donation.note')}
               </p>
 
               <button
@@ -531,7 +528,7 @@ export default function DonationWidget() {
                 onClick={() => void handleCreateDonation()}
                 type="button"
               >
-                {creating() ? 'Generating Checkout...' : `Generate ${targetLabel()} Checkout`}
+                {creating() ? t('donation.generatingCheckout') : `${t('donation.generateCheckout')} ${targetLabel()}`}
               </button>
             </div>
           </>
@@ -544,15 +541,15 @@ export default function DonationWidget() {
           <div class="donation-widget__selector-panel" role="dialog" aria-modal="true">
             <div class="donation-widget__selector-head">
               <div>
-                <div class="donation-widget__selector-kicker">Choose your send asset</div>
-                <div class="donation-widget__selector-title">Supported currencies</div>
+                <div class="donation-widget__selector-kicker">{t('donation.chooseSendAsset')}</div>
+                <div class="donation-widget__selector-title">{t('donation.supportedCurrencies')}</div>
               </div>
               <button
                 class="donation-widget__selector-close"
                 onClick={() => setSelectorOpen(false)}
                 type="button"
               >
-                Close
+                {t('donation.close')}
               </button>
             </div>
 

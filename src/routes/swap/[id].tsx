@@ -4,6 +4,7 @@ import { Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } 
 import Header from '../../components/Header/Header';
 import SiteFooter from '../../components/SiteFooter/SiteFooter';
 import { useCurrencies } from '../../hooks/useCurrencies';
+import { useLocale } from '../../i18n/locale';
 import { useSwap } from '../../hooks/useSwap';
 import type { CreateSwapResponse, SwapStatus, SwapStatusResponse } from '../../types/swap';
 import { format } from '../../utils/format';
@@ -70,7 +71,7 @@ const formatTimestamp = (value?: string): string => {
   }).format(date);
 };
 
-const formatCountdown = (value: string | undefined, now: number): string => {
+const formatCountdown = (value: string | undefined, now: number, expiredLabel: string): string => {
   if (!value) {
     return '—';
   }
@@ -82,7 +83,7 @@ const formatCountdown = (value: string | undefined, now: number): string => {
 
   const diffMs = expiresAt - now;
   if (diffMs <= 0) {
-    return 'Expired';
+    return expiredLabel;
   }
 
   const totalSeconds = Math.floor(diffMs / 1000);
@@ -101,20 +102,20 @@ const formatCountdown = (value: string | undefined, now: number): string => {
   return `${seconds}s`;
 };
 
-const formatStatus = (status?: SwapStatus): string => {
+const formatStatus = (status?: SwapStatus, labels?: Partial<Record<SwapStatus, string>>): string => {
   if (!status) {
     return 'Checking status';
   }
 
-  return STATUS_LABELS[status];
+  return labels?.[status] ?? STATUS_LABELS[status];
 };
 
-const formatStatusMessage = (status?: SwapStatus): string => {
+const formatStatusMessage = (status?: SwapStatus, messages?: Partial<Record<SwapStatus, string>>): string => {
   if (!status) {
     return 'Loading the latest transaction details.';
   }
 
-  return STATUS_MESSAGES[status];
+  return messages?.[status] ?? STATUS_MESSAGES[status];
 };
 
 const getStatusTone = (status?: SwapStatus): 'neutral' | 'warning' | 'success' | 'danger' => {
@@ -138,6 +139,7 @@ const getStatusTone = (status?: SwapStatus): 'neutral' | 'warning' | 'success' |
 };
 
 export default function SwapStatusPage() {
+  const { t } = useLocale();
   const params = useParams();
   const swap = useSwap();
   const { currencies } = useCurrencies();
@@ -255,6 +257,26 @@ export default function SwapStatusPage() {
   });
 
   const statusTone = createMemo(() => getStatusTone(pageData()?.status));
+  const statusLabels = createMemo<Record<SwapStatus, string>>(() => ({
+    waiting: t('status.waitingFunds'),
+    confirming: t('status.confirmingDeposit'),
+    exchanging: t('status.exchanging'),
+    sending: t('status.sendingPayout'),
+    completed: t('status.completed'),
+    failed: t('status.failed'),
+    refunded: t('status.refunded'),
+    expired: t('status.expired'),
+  }));
+  const statusMessages = createMemo<Record<SwapStatus, string>>(() => ({
+    waiting: t('status.waitingMessage'),
+    confirming: t('status.confirmingMessage'),
+    exchanging: t('status.exchangingMessage'),
+    sending: t('status.sendingMessage'),
+    completed: t('status.completedMessage'),
+    failed: t('status.failedMessage'),
+    refunded: t('status.refundedMessage'),
+    expired: t('status.expiredMessage'),
+  }));
 
   onCleanup(() => {
     if (copiedFieldTimer !== undefined) {
@@ -334,24 +356,21 @@ export default function SwapStatusPage() {
 
   return (
     <main class="swap-status-page">
-      <Title>Swap Status | ASSETAR</Title>
+      <Title>{`${t('status.pageTitle')} | ASSETAR`}</Title>
       <Header />
 
       <section class="swap-status-page__shell">
         <div class="swap-status-page__intro">
-          <div class="swap-status-page__eyebrow">Checkout</div>
-          <h1 class="swap-status-page__title">Track your live transaction from deposit to payout.</h1>
-          <p class="swap-status-page__copy">
-            This page keeps the deposit instructions visible while the backend refreshes the
-            latest provider status in the background.
-          </p>
+          <div class="swap-status-page__eyebrow">{t('status.eyebrow')}</div>
+          <h1 class="swap-status-page__title">{t('status.title')}</h1>
+          <p class="swap-status-page__copy">{t('status.introCopy')}</p>
         </div>
 
         <Show when={pageData()} fallback={
           <div class="swap-status-card swap-status-card--empty">
-            <div class="swap-status-card__section-title">Transaction lookup</div>
+            <div class="swap-status-card__section-title">{t('status.transactionLookup')}</div>
             <p class="swap-status-card__message">
-              {swap.error() ?? (swapId() ? 'Loading transaction details...' : 'No swap id provided.')}
+              {swap.error() ?? (swapId() ? t('status.loadingDetails') : t('status.noSwapId'))}
             </p>
             <Show when={swapId()}>
               <button
@@ -362,7 +381,7 @@ export default function SwapStatusPage() {
                 }}
                 type="button"
               >
-                {refreshing() ? 'Refreshing...' : 'Retry Status Check'}
+                {refreshing() ? t('status.refreshing') : t('status.retryStatus')}
               </button>
             </Show>
           </div>
@@ -372,29 +391,27 @@ export default function SwapStatusPage() {
               <section class="swap-status-card swap-status-card--primary">
                 <div class="swap-status-card__provider-block">
                   <div>
-                    <div class="swap-status-card__eyebrow">Chosen Provider</div>
-                    <div class="swap-status-card__provider">{detail().provider ?? 'Pending provider'}</div>
+                    <div class="swap-status-card__eyebrow">{t('status.chosenProvider')}</div>
+                    <div class="swap-status-card__provider">{detail().provider ?? t('status.pendingProvider')}</div>
                   </div>
                   <div
                     class={`swap-status-card__status swap-status-card__status--${statusTone()}`}
                   >
-                    {formatStatus(detail().status)}
+                    {formatStatus(detail().status, statusLabels())}
                   </div>
                 </div>
 
-                <p class="swap-status-card__message">{formatStatusMessage(detail().status)}</p>
+                <p class="swap-status-card__message">{formatStatusMessage(detail().status, statusMessages())}</p>
 
                 <div class="swap-status-card__amount-grid">
                   <div class="swap-status-card__amount-box">
-                    <span class="swap-status-card__amount-label">You’ll send</span>
+                    <span class="swap-status-card__amount-label">{t('status.sendAmount')}</span>
                     <strong>
                       {sendAmount() !== null
                         ? format.currency(sendAmount()!, detail().from ?? '')
                         : '—'}
                     </strong>
-                    <span>
-                      {detail().from_name ?? sendCurrency()?.name ?? detail().from ?? 'Unknown asset'}
-                    </span>
+                    <span>{detail().from_name ?? sendCurrency()?.name ?? detail().from ?? t('status.unknownAsset')}</span>
                     <Show when={detail().network_from ?? sendCurrency()?.network}>
                       <span>{detail().network_from ?? sendCurrency()?.network}</span>
                     </Show>
@@ -402,14 +419,14 @@ export default function SwapStatusPage() {
 
                   <div class="swap-status-card__amount-box">
                     <span class="swap-status-card__amount-label">
-                      {detail().actual_receive ? 'You received' : 'You’ll receive'}
+                      {detail().actual_receive ? t('status.receivedAmount') : t('status.receiveAmount')}
                     </span>
                     <strong>
                       {receiveAmount() !== null
                         ? format.currency(receiveAmount()!, detail().to ?? '')
                         : '—'}
                     </strong>
-                    <span>{detail().to_name ?? receiveCurrency()?.name ?? detail().to ?? 'Unknown asset'}</span>
+                    <span>{detail().to_name ?? receiveCurrency()?.name ?? detail().to ?? t('status.unknownAsset')}</span>
                     <Show when={detail().network_to ?? receiveCurrency()?.network}>
                       <span>{detail().network_to ?? receiveCurrency()?.network}</span>
                     </Show>
@@ -419,7 +436,7 @@ export default function SwapStatusPage() {
                 <div class="swap-status-card__field-stack">
                   <div class="swap-status-card__field">
                     <div class="swap-status-card__field-head">
-                      <span class="swap-status-card__field-label">Send funds to this deposit address</span>
+                      <span class="swap-status-card__field-label">{t('status.depositAddress')}</span>
                       <button
                         class="swap-status-card__copy"
                         disabled={!detail().deposit_address}
@@ -428,22 +445,22 @@ export default function SwapStatusPage() {
                         }}
                         type="button"
                       >
-                        {copiedField() === 'deposit-address' ? 'Copied' : 'Copy'}
+                        {copiedField() === 'deposit-address' ? t('status.copied') : t('status.copy')}
                       </button>
                     </div>
-                    <code>{detail().deposit_address ?? 'Unavailable'}</code>
+                    <code>{detail().deposit_address ?? t('status.unavailable')}</code>
                   </div>
 
                   <Show when={detail().deposit_extra_id}>
                     <div class="swap-status-card__field">
-                      <span class="swap-status-card__field-label">Deposit memo / extra id</span>
+                      <span class="swap-status-card__field-label">{t('status.depositMemo')}</span>
                       <code>{detail().deposit_extra_id}</code>
                     </div>
                   </Show>
 
                   <div class="swap-status-card__field">
                     <div class="swap-status-card__field-head">
-                      <span class="swap-status-card__field-label">Recipient address</span>
+                      <span class="swap-status-card__field-label">{t('status.recipientAddress')}</span>
                       <button
                         class="swap-status-card__copy"
                         disabled={!detail().recipient_address}
@@ -452,108 +469,107 @@ export default function SwapStatusPage() {
                         }}
                         type="button"
                       >
-                        {copiedField() === 'recipient-address' ? 'Copied' : 'Copy'}
+                        {copiedField() === 'recipient-address' ? t('status.copied') : t('status.copy')}
                       </button>
                     </div>
-                    <code>{detail().recipient_address ?? 'Unavailable'}</code>
+                    <code>{detail().recipient_address ?? t('status.unavailable')}</code>
                   </div>
 
                   <Show when={detail().recipient_extra_id}>
                     <div class="swap-status-card__field">
-                      <span class="swap-status-card__field-label">Recipient memo / extra id</span>
+                      <span class="swap-status-card__field-label">{t('status.recipientMemo')}</span>
                       <code>{detail().recipient_extra_id}</code>
                     </div>
                   </Show>
                 </div>
 
                 <div class="swap-status-card__warning">
-                  Do not send funds from mixers, gambling sources, or wallets likely to trigger AML
-                  review. Send the exact amount shown above.
+                  {t('status.warning')}
                 </div>
 
                 <div class="swap-status-card__actions">
                   <button
                     class="swap-status-card__refresh"
                     disabled={refreshing()}
-                    onClick={() => {
+                  onClick={() => {
                       void refreshStatus();
                     }}
                     type="button"
                   >
-                    {refreshing() ? 'Refreshing...' : 'Refresh Transaction Status'}
+                    {refreshing() ? t('status.refreshing') : t('status.refreshTransaction')}
                   </button>
 
                   <Show when={swap.polling()}>
-                    <span class="swap-status-card__polling">Live polling active</span>
+                    <span class="swap-status-card__polling">{t('status.livePolling')}</span>
                   </Show>
                 </div>
               </section>
 
               <div class="swap-status-page__sidebar">
                 <section class="swap-status-card">
-                  <div class="swap-status-card__section-title">Timing</div>
+                  <div class="swap-status-card__section-title">{t('status.timing')}</div>
                   <div class="swap-status-card__table">
                     <div class="swap-status-card__table-row">
-                      <span>Created</span>
+                      <span>{t('status.created')}</span>
                       <strong>{formatTimestamp(detail().created_at)}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Current time</span>
+                      <span>{t('status.currentTime')}</span>
                       <strong>{formatTimestamp(new Date(now()).toISOString())}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Last update</span>
+                      <span>{t('status.lastUpdate')}</span>
                       <strong>{formatTimestamp(detail().updated_at ?? detail().created_at)}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Expires</span>
+                      <span>{t('status.expires')}</span>
                       <strong>{formatTimestamp(detail().expires_at)}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Time remaining</span>
-                      <strong>{formatCountdown(detail().expires_at, now())}</strong>
+                      <span>{t('status.timeRemaining')}</span>
+                      <strong>{formatCountdown(detail().expires_at, now(), t('status.expired'))}</strong>
                     </div>
                   </div>
                 </section>
 
                 <section class="swap-status-card">
-                  <div class="swap-status-card__section-title">Transaction Details</div>
+                  <div class="swap-status-card__section-title">{t('status.details')}</div>
                   <div class="swap-status-card__table">
                     <div class="swap-status-card__table-row">
-                      <span>Assetar ID</span>
+                      <span>{t('status.assetarId')}</span>
                       <strong>{detail().swap_id ?? '—'}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Exchange</span>
+                      <span>{t('status.exchange')}</span>
                       <strong>{detail().provider ?? '—'}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Rate Type</span>
+                      <span>{t('status.rateType')}</span>
                       <strong>{detail().rate_type ?? '—'}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Status</span>
-                      <strong>{formatStatus(detail().status)}</strong>
+                      <span>{t('status.status')}</span>
+                      <strong>{formatStatus(detail().status, statusLabels())}</strong>
                     </div>
                     <div class="swap-status-card__table-row">
-                      <span>Rate</span>
+                      <span>{t('status.rate')}</span>
                       <strong>{detail().rate ? format.number(detail().rate, 6) : '—'}</strong>
                     </div>
                     <Show when={detail().provider_swap_id}>
                       <div class="swap-status-card__table-row">
-                        <span>Provider ID</span>
+                        <span>{t('status.providerId')}</span>
                         <strong>{detail().provider_swap_id}</strong>
                       </div>
                     </Show>
                     <Show when={detail().tx_hash_in}>
                       <div class="swap-status-card__table-row swap-status-card__table-row--full">
-                        <span>Deposit tx</span>
+                        <span>{t('status.depositTx')}</span>
                         <code>{detail().tx_hash_in}</code>
                       </div>
                     </Show>
                     <Show when={detail().tx_hash_out}>
                       <div class="swap-status-card__table-row swap-status-card__table-row--full">
-                        <span>Payout tx</span>
+                        <span>{t('status.payoutTx')}</span>
                         <code>{detail().tx_hash_out}</code>
                       </div>
                     </Show>
@@ -561,11 +577,8 @@ export default function SwapStatusPage() {
                 </section>
 
                 <section class="swap-status-card">
-                  <div class="swap-status-card__section-title">Need Help?</div>
-                  <p class="swap-status-card__message">
-                    If the status stalls or the swap fails, keep this transaction id and contact the
-                    selected exchange or Assetar support with the full swap details shown here.
-                  </p>
+                  <div class="swap-status-card__section-title">{t('status.needHelp')}</div>
+                  <p class="swap-status-card__message">{t('status.helpCopy')}</p>
                   <Show when={swap.error()}>
                     <div class="swap-status-card__error">{swap.error()}</div>
                   </Show>

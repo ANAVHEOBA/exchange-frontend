@@ -9,12 +9,18 @@
 import { apiClient } from '../client';
 import { API_CONFIG } from '../../config/api';
 import type { 
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   RegisterRequest, 
   RegisterResponse,
+  RequestVerificationRequest,
+  RequestVerificationResponse,
   LoginRequest,
   LoginResponse,
   LogoutResponse,
   MeResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   VerifyEmailResponse
 } from '../../types/auth';
 
@@ -24,6 +30,33 @@ const registerUser = async (request: RegisterRequest): Promise<RegisterResponse>
 
 const loginUser = async (request: LoginRequest): Promise<LoginResponse> => {
   return apiClient.post<LoginResponse>(API_CONFIG.endpoints.authLogin, request);
+};
+
+const requestVerificationRequest = async (
+  request: RequestVerificationRequest,
+): Promise<RequestVerificationResponse> => {
+  return apiClient.post<RequestVerificationResponse>(
+    API_CONFIG.endpoints.authRequestVerification,
+    request,
+  );
+};
+
+const forgotPasswordRequest = async (
+  request: ForgotPasswordRequest,
+): Promise<ForgotPasswordResponse> => {
+  return apiClient.post<ForgotPasswordResponse>(
+    API_CONFIG.endpoints.authForgotPassword,
+    request,
+  );
+};
+
+const resetPasswordRequest = async (
+  request: ResetPasswordRequest,
+): Promise<ResetPasswordResponse> => {
+  return apiClient.post<ResetPasswordResponse>(
+    API_CONFIG.endpoints.authResetPassword,
+    request,
+  );
 };
 
 const logoutUser = async (): Promise<LogoutResponse> => {
@@ -64,6 +97,11 @@ export const authApi = {
   login: loginUser,
 
   /**
+   * Request a fresh verification email for an unverified account
+   */
+  requestVerification: requestVerificationRequest,
+
+  /**
    * Login user and persist the access token for protected requests
    */
   async loginAndStoreSession(request: LoginRequest): Promise<LoginResponse> {
@@ -71,6 +109,16 @@ export const authApi = {
     storeSession(response);
     return response;
   },
+
+  /**
+   * Request a password reset email
+   */
+  forgotPassword: forgotPasswordRequest,
+
+  /**
+   * Complete a password reset using a valid token
+   */
+  resetPassword: resetPasswordRequest,
 
   /**
    * Logout current user
@@ -119,4 +167,7 @@ export const register = authApi.register;
 export const login = authApi.login;
 export const logout = authApi.logout;
 export const getCurrentUser = authApi.getCurrentUser;
+export const forgotPassword = authApi.forgotPassword;
+export const requestVerification = authApi.requestVerification;
+export const resetPassword = authApi.resetPassword;
 export const verifyEmail = authApi.verifyEmail;

@@ -1,36 +1,19 @@
-import { For, Show, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { For, Show, createSignal, onCleanup, onMount } from 'solid-js';
+import { useAuth } from '../../hooks/useAuth';
+import { SUPPORTED_LOCALES, getLocaleMeta, type SupportedLocale } from '../../i18n/config';
 import { useLocale } from '../../i18n/locale';
 import './Header.css';
 
-const LANGUAGE_STORAGE_KEY = 'assetar.language';
-const LANGUAGE_COOKIE_KEY = 'assetar.locale';
-
-const languageOptions = [
-  { code: 'EN', lang: 'en', label: 'English', flag: '/country/USAFlagIcon.jpg' },
-  { code: 'BR', lang: 'pt-BR', label: 'Português', flag: '/country/BrazilFlagIcon.jpg' },
-  { code: 'DE', lang: 'de', label: 'Deutsch', flag: '/country/GermanyFlagIcon.jpg' },
-  { code: 'EL', lang: 'el', label: 'Ελληνικά', flag: '/country/GreekFlagIcon.png' },
-  { code: 'ES', lang: 'es', label: 'Español', flag: '/country/SpainFlagIcon.jpg' },
-  { code: 'FR', lang: 'fr', label: 'Français', flag: '/country/FranceFlagIcon.jpg' },
-  { code: 'HI', lang: 'hi', label: 'हिन्दी', flag: '/country/HindiFlagIcon.png' },
-  { code: 'HR', lang: 'hr', label: 'Hrvatski', flag: '/country/CroatiaFlagIcon.png' },
-  { code: 'HU', lang: 'hu', label: 'Magyar', flag: '/country/HungaryFlagIcon.png' },
-  { code: 'ID', lang: 'id', label: 'Indonesia', flag: '/country/IndonesiaFlagIcon.png' },
-  { code: 'IT', lang: 'it', label: 'Italiano', flag: '/country/ItalyFlagIcon.png' },
-  { code: 'KO', lang: 'ko', label: '한국어', flag: '/country/KoreaFlagIcon.png' },
-  { code: 'NL', lang: 'nl', label: 'Nederlands', flag: '/country/DutchFlagIcon.jpg' },
-  { code: 'PL', lang: 'pl', label: 'Polski', flag: '/country/PolandFlagIcon.jpg' },
-  { code: 'RU', lang: 'ru', label: 'Русский', flag: '/country/RussiaFlagIcon.webp' },
-  { code: 'SR', lang: 'sr', label: 'Српски', flag: '/country/SerbianFlagIcon.png' },
-  { code: 'SV', lang: 'sv', label: 'Svenska', flag: '/country/SwedenFlagIcon.png' },
-  { code: 'TH', lang: 'th', label: 'ไทย', flag: '/country/ThailandFlagIcon.png' },
-  { code: 'TR', lang: 'tr', label: 'Türkçe', flag: '/country/TurkeyFlagIcon.png' },
-  { code: 'ZH', lang: 'zh', label: '中文', flag: '/country/ChineseFlagIcon.png' },
-] as const;
+const languageOptions = SUPPORTED_LOCALES.map(locale => ({
+  code: locale.code,
+  shortCode: locale.shortCode,
+  label: locale.nativeLabel,
+  flag: locale.flagAsset,
+})) as const;
 
 export default function Header() {
-  const { setLocale, t } = useLocale();
-  const [selectedLanguage, setSelectedLanguage] = createSignal(languageOptions[0]);
+  const auth = useAuth();
+  const { locale, switchLocale, t } = useLocale();
   const [languageMenuOpen, setLanguageMenuOpen] = createSignal(false);
   const [accountMenuOpen, setAccountMenuOpen] = createSignal(false);
 
@@ -38,32 +21,6 @@ export default function Header() {
   let accountMenuRef: HTMLDivElement | undefined;
 
   onMount(() => {
-    try {
-      const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      const cookieLanguage = document.cookie
-        .split(';')
-        .map(part => part.trim())
-        .find(part => part.startsWith(`${LANGUAGE_COOKIE_KEY}=`))
-        ?.split('=')[1];
-      const browserLanguage = window.navigator.language;
-      const matchedLanguage = languageOptions.find(option => {
-        return (
-          option.lang === savedLanguage ||
-          option.code.toLowerCase() === savedLanguage?.toLowerCase() ||
-          option.lang === cookieLanguage ||
-          option.code.toLowerCase() === cookieLanguage?.toLowerCase()
-        );
-      }) ?? languageOptions.find(option => {
-        return browserLanguage.toLowerCase().startsWith(option.lang.toLowerCase());
-      });
-
-      if (matchedLanguage) {
-        setSelectedLanguage(matchedLanguage);
-      }
-    } catch {
-      // Ignore storage access restrictions and fall back to English.
-    }
-
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
 
@@ -81,28 +38,16 @@ export default function Header() {
       window.removeEventListener('mousedown', handlePointerDown);
     });
   });
+  const selectedLanguage = () => getLocaleMeta(locale() as SupportedLocale);
+  const accountHref = () => {
+    const username = auth.user()?.username?.trim();
 
-  createEffect(() => {
-    const language = selectedLanguage();
-
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = language.lang;
+    if (auth.initialized() && auth.isAuthenticated() && username) {
+      return `/profile/${encodeURIComponent(username)}`;
     }
 
-    setLocale(language.lang);
-
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language.lang);
-      } catch {
-        // Ignore storage access restrictions and keep the in-memory choice.
-      }
-    }
-
-    if (typeof document !== 'undefined') {
-      document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language.lang)}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    }
-  });
+    return '/login';
+  };
 
   return (
     <header class="site-header">
@@ -118,15 +63,12 @@ export default function Header() {
         </a>
 
         <nav class="site-nav" aria-label="Primary">
-          {[
-            { label: t('header.howItWorks'), href: '#how-it-works' },
-            { label: t('header.faq'), href: '#faq' },
-            { label: t('header.contact'), href: '#contact' },
-          ].map(item => (
-            <a href={item.href} class="site-nav__link">
-              {item.label}
-            </a>
-          ))}
+          <a href="/#swap" class="site-nav__link">
+            {t('header.swap')}
+          </a>
+          <a href="/giftcards" class="site-nav__link">
+            {t('header.giftcards')}
+          </a>
         </nav>
 
         <div class="site-header__actions">
@@ -139,8 +81,8 @@ export default function Header() {
                 aria-expanded={languageMenuOpen()}
                 aria-label={t('header.selectLanguage')}
               >
-                <img class="site-language__flag" src={selectedLanguage().flag} alt="" aria-hidden="true" />
-                <span class="site-language__code">{selectedLanguage().code}</span>
+                <img class="site-language__flag" src={selectedLanguage().flagAsset} alt="" aria-hidden="true" />
+                <span class="site-language__code">{selectedLanguage().shortCode}</span>
                 <img
                   class="site-language__chevron"
                   classList={{ open: languageMenuOpen() }}
@@ -162,14 +104,14 @@ export default function Header() {
                         class="site-language__option"
                         classList={{ active: selectedLanguage().code === option.code }}
                         onClick={() => {
-                          setSelectedLanguage(option);
+                          switchLocale(option.code);
                           setLanguageMenuOpen(false);
                         }}
                         type="button"
                       >
                         <img class="site-language__flag" src={option.flag} alt="" aria-hidden="true" />
                         <span class="site-language__option-copy">
-                          <span class="site-language__code">{option.code}</span>
+                          <span class="site-language__code">{option.shortCode}</span>
                           <span class="site-language__label">{option.label}</span>
                         </span>
                       </button>
@@ -204,8 +146,8 @@ export default function Header() {
 
               <Show when={accountMenuOpen()}>
                 <div class="site-account__menu" role="menu" aria-label="Account">
-                  <a class="site-account__menu-link" href="/login">
-                    {t('header.login')}
+                  <a class="site-account__menu-link" href={accountHref()}>
+                    {auth.initialized() && auth.isAuthenticated() ? t('header.profile') : t('header.login')}
                   </a>
                   <a class="site-account__menu-link" href="/about">
                     {t('header.about')}

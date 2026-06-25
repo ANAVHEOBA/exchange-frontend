@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { useLocale } from "../../i18n/locale";
 import "./PartnersWall.css";
 
 const partnerFiles = [
@@ -58,23 +59,22 @@ const formatPartnerName = (fileName: string) => {
 };
 
 export default function PartnersWall() {
+  const { t } = useLocale();
   const [mobileOpen, setMobileOpen] = createSignal(false);
 
   return (
     <section class="partners-wall" id="partners">
       <div class="partners-wall__inner">
         <div class="partners-wall__intro">
-          <p class="partners-wall__eyebrow">Partners</p>
-          <h2 class="partners-wall__title">A broad network of exchanges and crypto services.</h2>
-          <p class="partners-wall__summary">
-            Assetar routes users across trusted providers so the best available option is visible in one place without forcing the user to juggle multiple exchange accounts.
-          </p>
+          <p class="partners-wall__eyebrow">{t("partners.eyebrow")}</p>
+          <h2 class="partners-wall__title">{t("partners.title")}</h2>
+          <p class="partners-wall__summary">{t("partners.summary")}</p>
         </div>
 
         <div class="partners-wall__panel">
           <div class="partners-wall__panel-header">
-            <h3 class="partners-wall__panel-title">Our Partners</h3>
-            <p class="partners-wall__panel-copy">{partnerFiles.length} providers and services</p>
+            <h3 class="partners-wall__panel-title">{t("partners.panelTitle")}</h3>
+            <p class="partners-wall__panel-copy">{partnerFiles.length} {t("partners.panelCopy")}</p>
           </div>
 
           <button
@@ -84,7 +84,7 @@ export default function PartnersWall() {
             aria-controls="partners-wall-grid"
             onClick={() => setMobileOpen(open => !open)}
           >
-            <span>Browse providers</span>
+            <span>{t("partners.browse")}</span>
             <span
               class="partners-wall__mobile-toggle-chevron"
               classList={{ "partners-wall__mobile-toggle-chevron--open": mobileOpen() }}

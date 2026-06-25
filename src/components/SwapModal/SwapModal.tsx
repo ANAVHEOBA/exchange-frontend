@@ -10,6 +10,7 @@ import {
   validateRecipientExtraId,
 } from '../../features/swap-execution';
 import { useCurrencies } from '../../hooks/useCurrencies';
+import { useLocale } from '../../i18n/locale';
 import { useSwap } from '../../hooks/useSwap';
 import type { Currency } from '../../types/currency';
 import type { RateType } from '../../types/rate';
@@ -236,6 +237,7 @@ const findPreferredCurrency = (
 
 function SwapModal(props: SwapModalProps) {
   const { currencies } = useCurrencies();
+  const { t } = useLocale();
   const swap = useSwap();
   const navigate = useNavigate();
   const layout = createMemo<SwapModalLayout>(() => props.layout ?? 'card');
@@ -515,18 +517,18 @@ function SwapModal(props: SwapModalProps) {
 
   const helperText = createMemo(() => {
     if (!fromCurrency() || !toCurrency()) {
-      return 'Select a source and destination currency.';
+      return t('swap.selectPairAmount');
     }
 
     if (isSameCurrency(fromCurrency(), toCurrency())) {
-      return 'Choose a different destination currency to fetch live quotes.';
+      return t('swap.selectPairAmount');
     }
 
     if (!parsedAmount()) {
-      return 'Enter an amount greater than zero.';
+      return t('swap.selectPairAmount');
     }
 
-    return `Choose a ${selectedRateType()} route to continue.`;
+    return t('swap.chooseExchange');
   });
 
   const showDetails = createMemo(() => {
@@ -561,19 +563,19 @@ function SwapModal(props: SwapModalProps) {
 
   const executionMessage = createMemo(() => {
     if (createdSwap()) {
-      return 'Swap created. Send the exact deposit amount to the address below before the route expires.';
+      return t('swap.createdMessage');
     }
 
     if (!quoteDiscovery.selectedRate()) {
-      return `Select a ${selectedRateType()} route before confirming the exchange.`;
+      return t('swap.selectRouteBeforeConfirm');
     }
 
     if (!recipientAddress().trim()) {
-      return 'Enter the destination address to continue.';
+      return t('swap.enterDestination');
     }
 
     if (!addressValidation.isValid()) {
-      return 'Validate the destination address before continuing.';
+      return t('swap.validateDestination');
     }
 
     if (recipientExtraIdError()) {
@@ -584,7 +586,7 @@ function SwapModal(props: SwapModalProps) {
       return refundExtraIdError()!;
     }
 
-    return 'Address is validated and the selected exchange is ready to confirm.';
+    return t('swap.addressValidated');
   });
 
   const receiveValue = createMemo(() => {
@@ -593,7 +595,7 @@ function SwapModal(props: SwapModalProps) {
     }
 
     if (quoteDiscovery.loading() || quoteDiscovery.refreshing()) {
-      return 'Checking route...';
+      return t('swap.checkingRoute');
     }
 
     return '';
@@ -601,78 +603,78 @@ function SwapModal(props: SwapModalProps) {
 
   const routeStatus = createMemo(() => {
     if (!quoteQuery()) {
-      return 'Select a pair and enter an amount.';
+      return t('swap.selectPairAmount');
     }
 
     if (quoteDiscovery.loading()) {
-      return `Checking ${selectedRateType()} routes.`;
+      return t('swap.checkingRoutes');
     }
 
     if (quoteDiscovery.refreshing() && quoteDiscovery.estimate()) {
-      return `Preview ready via ${quoteDiscovery.estimate()!.best_provider}. Checking live ${selectedRateType()} providers...`;
+      return `${t('swap.previewReady')} ${quoteDiscovery.estimate()!.best_provider}. ${t('swap.liveProvidersChecking')}`;
     }
 
     if (!quoteDiscovery.selectedRate()) {
       if (quoteDiscovery.estimate()) {
         if (quoteDiscovery.error()) {
           if (isNoRouteError(quoteDiscovery.error())) {
-            return `Preview ready, but no live ${selectedRateType()} route is available for the current pair.`;
+            return t('swap.previewNoLive');
           }
 
-          return 'Estimate is ready, but the live provider check is delayed.';
+          return t('swap.estimateDelayed');
         }
 
-        return `Preview ready from ${quoteDiscovery.estimate()!.provider_count} providers. Waiting for live route details.`;
+        return `${t('swap.previewWaiting')} ${quoteDiscovery.estimate()!.provider_count} ${t('swap.previewWaitingSuffix')}`;
       }
 
       if (quoteDiscovery.error()) {
         if (isNoRouteError(quoteDiscovery.error())) {
-          return `No ${selectedRateType()} route available for the current pair.`;
+          return t('swap.noRouteForPair');
         }
 
-        return 'Live route lookup failed. Try another pair or try again shortly.';
+        return t('swap.liveLookupFailed');
       }
 
-      return `No ${selectedRateType()} route available for the current pair.`;
+      return t('swap.noRouteForPair');
     }
 
-    return `${quoteDiscovery.providerCount()} ${selectedRateType()} routes, best via ${quoteDiscovery.selectedRate()!.provider_name}.`;
+    return `${quoteDiscovery.providerCount()} ${t('swap.routesBestVia')} ${quoteDiscovery.selectedRate()!.provider_name}.`;
   });
 
   const primaryLabel = createMemo(() => {
     if (quoteDiscovery.loading()) {
-      return 'Checking routes...';
+      return t('swap.checkingRoutes');
     }
 
     if (quoteDiscovery.refreshing()) {
-      return 'Refreshing routes...';
+      return t('swap.refreshingRoutes');
     }
 
     if (isNoRouteError(quoteDiscovery.error())) {
-      return 'No route available';
+      return t('swap.noRouteAvailable');
     }
 
     if (detailsOpen()) {
-      return 'Route selection below';
+      return t('swap.routeSelectionBelow');
     }
 
-    return 'Choose Exchange';
+    return t('swap.chooseExchange');
   });
 
   const executionLabel = createMemo(() => {
     if (swap.creating()) {
-      return 'Confirming Exchange...';
+      return t('swap.confirmingExchange');
     }
 
     if (createdSwap()) {
-      return 'Exchange Created';
+      return t('swap.exchangeCreated');
     }
 
-    return 'Confirm Exchange';
+    return t('swap.confirmExchange');
   });
 
   const modeDescription = createMemo(() => {
-    return 'Standard uses the amount you send and then lets you compare live exchange routes.';
+    return t('swap.standardDescription');
   });
 
   const handleCurrencyPick = (currency: Currency) => {
@@ -800,11 +802,11 @@ function SwapModal(props: SwapModalProps) {
     >
       <Show when={!isPageLayout()}>
         <div class="swap-card">
-        <div class="swap-card__title">Start Exchange</div>
+        <div class="swap-card__title">{t('swap.startExchange')}</div>
 
         <div class="swap-card__coins">
           <section class="swap-coin">
-            <div class="swap-coin__label">You Send</div>
+            <div class="swap-coin__label">{t('swap.youSend')}</div>
             <div class="swap-coin__row">
               <button
                 class="swap-coin__picker"
@@ -834,7 +836,7 @@ function SwapModal(props: SwapModalProps) {
                   inputMode="decimal"
                   autocomplete="off"
                   spellcheck={false}
-                  placeholder="Type amount"
+                  placeholder={t('swap.typeAmount')}
                   value={amount()}
                   onInput={handleAmountInput}
                 />
@@ -852,13 +854,13 @@ function SwapModal(props: SwapModalProps) {
             class="swap-coin__switch"
             onClick={handleSwapCurrencies}
             type="button"
-            aria-label="Swap selected currencies"
+            aria-label={t('swap.startExchange')}
           >
             ↕
           </button>
 
           <section class="swap-coin">
-            <div class="swap-coin__label">You Get</div>
+            <div class="swap-coin__label">{t('swap.youGet')}</div>
             <div class="swap-coin__row">
               <button
                 class="swap-coin__picker"
@@ -883,7 +885,7 @@ function SwapModal(props: SwapModalProps) {
               </button>
 
               <div class="swap-coin__amount swap-coin__amount--readonly">
-                <input type="text" placeholder="Estimated receive" readOnly value={receiveValue()} />
+                <input type="text" placeholder={t('swap.checkingRoute')} readOnly value={receiveValue()} />
               </div>
             </div>
             <div class="swap-coin__meta">
@@ -898,7 +900,7 @@ function SwapModal(props: SwapModalProps) {
         <div class="swap-card__footer">
           <div class="swap-mode-indicator" aria-label="Active swap mode">
             <div class="swap-mode-indicator__pill">
-              Standard
+              {t('swap.standard')}
             </div>
           </div>
 
@@ -926,15 +928,15 @@ function SwapModal(props: SwapModalProps) {
       <Show when={selectorTarget() && !isPageLayout()}>
         <div class="swap-selector-panel">
           <div class="swap-selector-header">
-            <span>
-              {selectorTarget() === 'from' ? 'Choose what you send' : 'Choose what you receive'}
+              <span>
+              {selectorTarget() === 'from' ? t('swap.youSend') : t('swap.youGet')}
             </span>
             <button
               class="swap-selector-close"
               onClick={() => setSelectorTarget(null)}
               type="button"
             >
-              Close
+              {t('swap.close')}
             </button>
           </div>
           <CurrencySelector
@@ -952,10 +954,10 @@ function SwapModal(props: SwapModalProps) {
           <div class="swap-selection">
             <div class="swap-selection__form">
               <div class="swap-selection__panel">
-                <div class="swap-selection__heading">Confirm Exchange</div>
+                <div class="swap-selection__heading">{t('swap.confirmExchange')}</div>
 
                 <div class="swap-selection__summary">
-                  <div class="swap-selection__summary-label">You send:</div>
+                  <div class="swap-selection__summary-label">{t('swap.youSend')}:</div>
                   <div class="swap-selection__summary-card">
                     <div class="swap-selection__summary-values">
                       <Show when={approximateUsd(sendAmountUsd())}>
@@ -984,14 +986,14 @@ function SwapModal(props: SwapModalProps) {
                 </div>
 
                 <div class="swap-selection__summary">
-                  <div class="swap-selection__summary-label">You get approximately:</div>
+                  <div class="swap-selection__summary-label">{t('swap.youGet')}:</div>
                   <div class="swap-selection__summary-card">
                     <div class="swap-selection__summary-values">
                       <Show when={approximateUsd(receiveAmountUsd())}>
                         <div class="swap-selection__summary-usd">{approximateUsd(receiveAmountUsd())}</div>
                       </Show>
                       <div class="swap-selection__summary-amount">
-                        <Show when={receiveAmount() !== null} fallback="Checking route...">
+                        <Show when={receiveAmount() !== null} fallback={t('swap.checkingRoute')}>
                           {format.number(receiveAmount()!, 6)}
                         </Show>
                       </div>
@@ -1066,7 +1068,7 @@ function SwapModal(props: SwapModalProps) {
               </button>
 
               <button class="swap-selection__edit" onClick={handleEditTransaction} type="button">
-                Edit Transaction
+                {t('swap.editTransaction')}
               </button>
 
               <Show when={swap.error() && !createdSwap()}>
@@ -1089,7 +1091,7 @@ function SwapModal(props: SwapModalProps) {
               <div class="swap-created-card">
                 <div class="swap-created-card__header">
                   <div>
-                    <div class="swap-created-card__eyebrow">Deposit Instructions</div>
+                    <div class="swap-created-card__eyebrow">{t('swap.depositInstructions')}</div>
                     <div class="swap-created-card__headline">{currentSwap().provider}</div>
                   </div>
                   <div class="swap-created-card__status">{currentSwap().status}</div>
@@ -1097,40 +1099,40 @@ function SwapModal(props: SwapModalProps) {
 
                 <div class="swap-created-card__grid">
                   <div class="swap-created-card__field">
-                    <span>Send</span>
+                    <span>{t('swap.youSend')}</span>
                     <strong>{format.currency(getSwapDepositAmount(currentSwap()), currentSwap().from)}</strong>
                   </div>
                   <div class="swap-created-card__field">
-                    <span>Estimated Receive</span>
+                    <span>{t('swap.youGet')}</span>
                     <strong>{format.currency(currentSwap().estimated_receive, currentSwap().to)}</strong>
                   </div>
                   <div class="swap-created-card__field">
-                    <span>Swap ID</span>
+                    <span>{t('status.assetarId')}</span>
                     <code>{currentSwap().swap_id}</code>
                   </div>
                   <div class="swap-created-card__field">
-                    <span>Recipient</span>
+                    <span>{t('status.recipientAddress')}</span>
                     <code>{currentSwap().recipient_address}</code>
                   </div>
                   <div class="swap-created-card__field swap-created-card__field--full">
-                    <span>Deposit Address</span>
+                    <span>{t('status.depositAddress')}</span>
                     <code>{currentSwap().deposit_address}</code>
                   </div>
                   <Show when={currentSwap().deposit_extra_id}>
                     <div class="swap-created-card__field swap-created-card__field--full">
-                      <span>Deposit Memo / Extra ID</span>
+                      <span>{t('status.depositMemo')}</span>
                       <code>{currentSwap().deposit_extra_id}</code>
                     </div>
                   </Show>
                   <Show when={formatTimestamp(currentSwap().expires_at)}>
                     <div class="swap-created-card__field">
-                      <span>Expires</span>
+                      <span>{t('status.expires')}</span>
                       <strong>{formatTimestamp(currentSwap().expires_at)}</strong>
                     </div>
                   </Show>
                   <Show when={formatTimestamp(currentSwap().created_at)}>
                     <div class="swap-created-card__field">
-                      <span>Created</span>
+                      <span>{t('status.created')}</span>
                       <strong>{formatTimestamp(currentSwap().created_at)}</strong>
                     </div>
                   </Show>

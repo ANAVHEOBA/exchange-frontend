@@ -1,0 +1,537 @@
+.giftcards-page {
+  min-height: 100vh;
+  background: var(--assetar-background);
+}
+
+.giftcards-page__shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.giftcards-page__hero {
+  padding: 30px 0 24px;
+}
+
+.giftcards-page__intro {
+  max-width: 760px;
+}
+
+.giftcards-page__eyebrow {
+  color: #2563eb;
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.giftcards-page__title {
+  margin-top: 0.9rem;
+  color: #0f172a;
+  font-size: clamp(2.4rem, 5vw, 3.9rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.giftcards-page__copy {
+  margin-top: 1rem;
+  max-width: 720px;
+  color: var(--assetar-text-muted);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.giftcards-page__limit {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1.3rem;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.giftcards-page__filter-card,
+.giftcards-page__catalog,
+.giftcards-page__checkout-card,
+.giftcards-page__feedback,
+.giftcards-page__modal-card {
+  border: 1px solid var(--assetar-border);
+  border-radius: 28px;
+  background: var(--assetar-background);
+  box-shadow: var(--assetar-shadow-panel);
+}
+
+.giftcards-page__filter-card {
+  margin-top: 1.75rem;
+  padding: 20px;
+}
+
+.giftcards-page__filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.giftcards-page__field {
+  display: grid;
+  gap: 8px;
+}
+
+.giftcards-page__field > span {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.giftcards-page__field input,
+.giftcards-page__field select,
+.giftcards-page__currency-trigger {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--assetar-border);
+  border-radius: 16px;
+  background: var(--assetar-background);
+  color: var(--assetar-text);
+}
+
+.giftcards-page__selected-country {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.giftcards-page__selected-country strong {
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.giftcards-page__content {
+  padding: 8px 0 72px;
+}
+
+.giftcards-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.92fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.giftcards-page__catalog {
+  padding: 22px;
+}
+
+.giftcards-page__catalog-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.giftcards-page__catalog-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.8rem;
+  letter-spacing: -0.04em;
+}
+
+.giftcards-page__catalog-header p {
+  margin-top: 6px;
+  color: var(--assetar-text-muted);
+  font-size: 0.94rem;
+}
+
+.giftcards-page__refresh {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--assetar-border);
+  border-radius: 999px;
+  background: var(--assetar-background);
+  color: var(--assetar-blue);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giftcards-page__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.giftcards-page__product {
+  display: grid;
+  gap: 12px;
+  padding: 10px 10px 14px;
+  border: 1px solid var(--assetar-border);
+  border-radius: 22px;
+  background: var(--assetar-background);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.giftcards-page__product:hover,
+.giftcards-page__product--selected {
+  transform: translateY(-2px);
+  border-color: #bfdbfe;
+  box-shadow: 0 20px 32px rgba(37, 99, 235, 0.12);
+}
+
+.giftcards-page__product-image-wrap,
+.giftcards-page__checkout-image-wrap {
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.giftcards-page__product-image-wrap {
+  aspect-ratio: 1.57 / 1;
+}
+
+.giftcards-page__checkout-image-wrap {
+  width: 124px;
+  aspect-ratio: 1.57 / 1;
+  flex-shrink: 0;
+}
+
+.giftcards-page__product-image,
+.giftcards-page__checkout-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.giftcards-page__product-image-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #1d4ed8;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.giftcards-page__product-name {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.giftcards-page__product-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--assetar-text-muted);
+  font-size: 0.82rem;
+}
+
+.giftcards-page__checkout {
+  position: sticky;
+  top: 24px;
+}
+
+.giftcards-page__checkout-card {
+  padding: 22px;
+}
+
+.giftcards-page__checkout-card--empty {
+  display: grid;
+  gap: 10px;
+  min-height: 240px;
+  place-content: center;
+  text-align: center;
+}
+
+.giftcards-page__checkout-card--empty h2 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.giftcards-page__checkout-card--empty p {
+  color: var(--assetar-text-muted);
+}
+
+.giftcards-page__checkout-head {
+  display: flex;
+  gap: 16px;
+  align-items: start;
+}
+
+.giftcards-page__checkout-category {
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.giftcards-page__checkout-copy h2 {
+  margin: 8px 0 0;
+  color: #0f172a;
+  font-size: 1.5rem;
+  line-height: 1.05;
+}
+
+.giftcards-page__checkout-copy p {
+  margin-top: 10px;
+  color: var(--assetar-text-muted);
+  font-size: 0.92rem;
+}
+
+.giftcards-page__checkout-stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.giftcards-page__denominations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.giftcards-page__denomination {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--assetar-border);
+  border-radius: 999px;
+  background: var(--assetar-background);
+  color: var(--assetar-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giftcards-page__denomination.active {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.giftcards-page__field-note,
+.giftcards-page__checkout-note {
+  color: var(--assetar-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.giftcards-page__field-error {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.giftcards-page__currency-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.giftcards-page__currency-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.giftcards-page__checkout-button {
+  min-height: 52px;
+  border: none;
+  border-radius: 18px;
+  background: var(--assetar-blue);
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giftcards-page__checkout-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.giftcards-page__details {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--assetar-border-soft);
+}
+
+.giftcards-page__details h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.giftcards-page__details details {
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--assetar-border);
+  background: #fafcff;
+}
+
+.giftcards-page__details summary {
+  cursor: pointer;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.giftcards-page__details p {
+  margin-top: 10px;
+  color: var(--assetar-text-muted);
+  font-size: 0.94rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.giftcards-page__feedback {
+  display: grid;
+  gap: 12px;
+  place-items: center;
+  min-height: 220px;
+  padding: 24px;
+  text-align: center;
+  color: var(--assetar-text-muted);
+}
+
+.giftcards-page__feedback--error {
+  color: #b91c1c;
+}
+
+.giftcards-page__feedback button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--assetar-blue);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giftcards-page__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.giftcards-page__modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.56);
+}
+
+.giftcards-page__modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(880px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  padding: 20px;
+  overflow: hidden;
+}
+
+.giftcards-page__modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.giftcards-page__modal-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.4rem;
+}
+
+.giftcards-page__modal-head button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--assetar-border);
+  border-radius: 999px;
+  background: var(--assetar-background);
+  color: var(--assetar-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+@media (max-width: 1120px) {
+  .giftcards-page__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .giftcards-page__checkout {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .giftcards-page__shell {
+    padding: 0 20px;
+  }
+
+  .giftcards-page__filter-grid,
+  .giftcards-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .giftcards-page__shell {
+    padding: 0 16px;
+  }
+
+  .giftcards-page__hero {
+    padding-top: 20px;
+  }
+
+  .giftcards-page__filter-grid,
+  .giftcards-page__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .giftcards-page__catalog,
+  .giftcards-page__checkout-card,
+  .giftcards-page__filter-card {
+    padding: 18px;
+  }
+
+  .giftcards-page__catalog-header,
+  .giftcards-page__selected-country,
+  .giftcards-page__checkout-head {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .giftcards-page__checkout-image-wrap {
+    width: 100%;
+  }
+}

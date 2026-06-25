@@ -38,7 +38,16 @@ export const API_CONFIG = {
     authLogin: '/auth/login',
     authLogout: '/auth/logout',
     authMe: '/auth/me',
+    authForgotPassword: '/auth/forgot-password',
+    authResetPassword: '/auth/reset-password',
+    authRequestVerification: '/auth/request-verification',
     authVerifyEmail: '/auth/verify-email',
+
+    // Gift card endpoints
+    giftcardsCatalog: '/giftcards',
+    giftcardsPrepaid: '/giftcards/prepaid',
+    giftcardsOrder: '/giftcards/order',
+    giftcardsOrderStatus: '/giftcards/orders',
   },
   
   // Request settings

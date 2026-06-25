@@ -1,3 +1,5 @@
+import { createMemo } from "solid-js";
+import { useLocale } from "../../i18n/locale";
 import "./SiteFooter.css";
 
 const supportItems = [
@@ -18,14 +20,15 @@ const contactItems = [
   },
 ];
 
-const footerLinks = [
-  { label: "Home", href: "/" },
-  { label: "Terms of Use" },
-  { label: "Privacy Policy" },
-  { label: "About", href: "/about" },
-];
-
 export default function SiteFooter() {
+  const { t } = useLocale();
+  const footerLinks = createMemo(() => [
+    { label: t("footer.home"), href: "/" },
+    { label: t("footer.terms") },
+    { label: t("footer.privacy") },
+    { label: t("footer.about"), href: "/about" },
+  ]);
+
   return (
     <footer class="site-footer" id="contact">
       <div class="site-footer__inner">
@@ -33,11 +36,11 @@ export default function SiteFooter() {
           <a class="site-footer__brand-link" href="/">
             Assetar.app
           </a>
-          <p class="site-footer__copyright">© Assetar Exchange</p>
+          <p class="site-footer__copyright">{t("footer.copyright")}</p>
         </div>
 
         <div class="site-footer__column">
-          <h3 class="site-footer__heading">Support:</h3>
+          <h3 class="site-footer__heading">{t("footer.support")}</h3>
           <div class="site-footer__items">
             {supportItems.map(item => (
               <a class="site-footer__item" href={item.href} target="_blank" rel="noreferrer">
@@ -48,7 +51,7 @@ export default function SiteFooter() {
         </div>
 
         <div class="site-footer__column">
-          <h3 class="site-footer__heading">Contact Us:</h3>
+          <h3 class="site-footer__heading">{t("footer.contactUs")}</h3>
           <div class="site-footer__items">
             {contactItems.map(item =>
               item.href ? (
@@ -64,7 +67,7 @@ export default function SiteFooter() {
 
         <nav class="site-footer__column site-footer__column--nav" aria-label="Footer">
           <div class="site-footer__items">
-            {footerLinks.map(item =>
+            {footerLinks().map(item =>
               item.href ? (
                 <a class="site-footer__item" href={item.href}>
                   {item.label}

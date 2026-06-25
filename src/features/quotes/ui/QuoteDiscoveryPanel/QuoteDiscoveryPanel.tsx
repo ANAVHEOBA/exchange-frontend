@@ -1,4 +1,5 @@
 import { For, Match, Show, Switch, createMemo } from 'solid-js';
+import { useLocale } from '../../../../i18n/locale';
 import { format } from '../../../../utils/format';
 import type { Rate, RateType } from '../../../../types/rate';
 import type { QuoteDiscoveryController } from '../../model';
@@ -70,6 +71,7 @@ const describeError = (error: unknown): string => {
 };
 
 export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
+  const { t } = useLocale();
   const currentRate = createMemo(() => props.quote.selectedRate() ?? props.quote.bestRate());
   const currentEstimate = createMemo(() => props.quote.estimate());
   const providerCount = createMemo(() => props.quote.rates().length);
@@ -85,24 +87,24 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
   };
 
   const tabLabel = (rateType: RateType) => {
-    return rateType === 'floating' ? 'Floating Rate' : 'Fixed Rate';
+    return rateType === 'floating' ? t('quote.floatingTab') : t('quote.fixedTab');
   };
 
   const emptyMessage = createMemo(() => {
     return props.rateType === 'fixed'
-      ? 'No fixed-rate providers returned a route for this pair yet.'
-      : 'No floating-rate providers returned a route for this pair yet.';
+      ? t('quote.emptyFixed')
+      : t('quote.emptyFloating');
   });
 
   return (
     <section class="quote-discovery">
       <div class="quote-discovery__header">
         <div class="quote-discovery__title">
-          {props.title ?? 'Choose your Exchange and Rate'}
+          {props.title ?? t('quote.defaultTitle')}
         </div>
         <Show when={props.subtitle !== ''}>
           <div class="quote-discovery__guarantee">
-            {props.subtitle ?? 'All transactions are covered by the Trocador Guarantee'}
+            {props.subtitle ?? t('quote.defaultSubtitle')}
           </div>
         </Show>
       </div>
@@ -129,7 +131,7 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
       <Switch>
         <Match when={!props.quote.canFetch()}>
           <div class="quote-discovery__state">
-            {props.idleMessage ?? 'Select currencies and enter an amount to compare routes.'}
+            {props.idleMessage ?? t('quote.idle')}
           </div>
         </Match>
 
@@ -137,10 +139,10 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
           <div class="quote-discovery__state quote-discovery__state--loading">
             <div class="quote-discovery__spinner" aria-hidden="true" />
             <strong class="quote-discovery__loading-copy">
-              {props.rateType === 'fixed' ? 'Checking fixed routes...' : 'Checking floating routes...'}
+              {props.rateType === 'fixed' ? t('quote.loadingFixed') : t('quote.loadingFloating')}
             </strong>
             <span class="quote-discovery__loading-subcopy">
-              Comparing live providers for the current pair.
+              {t('quote.loadingSubcopy')}
             </span>
           </div>
         </Match>
@@ -149,12 +151,12 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
           <div class="quote-discovery__summary">
             <div class="quote-discovery__summary-main">
               <div class="quote-discovery__summary-provider">
-                {currentRate()?.provider_name ?? 'No provider selected'}
+                {currentRate()?.provider_name ?? t('quote.noRoute')}
               </div>
               <div class="quote-discovery__summary-amount">
                 <Show
                   when={currentRate()}
-                  fallback="Waiting for live route"
+                  fallback={t('quote.waitingLiveRoute')}
                 >
                   {`~${format.number(currentRate()!.estimated_amount, 6)}`}
                 </Show>
@@ -170,15 +172,15 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
                 <span>{`~${format.usd(currentRate()!.amount_to_usd!)}`}</span>
               </Show>
               <Show when={props.quote.refreshing()}>
-                <span>Refreshing</span>
+                <span>{t('quote.refreshing')}</span>
               </Show>
             </div>
           </div>
 
           <div class="quote-discovery__table">
             <div class="quote-discovery__table-head">
-              <span>Exchange</span>
-              <span>Rate</span>
+              <span>{t('status.exchange')}</span>
+              <span>{t('status.rate')}</span>
               <span>Spread</span>
               <span>ETA</span>
               <span>Privacy</span>
@@ -216,17 +218,17 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
         <Match when={currentEstimate()}>
           <div class="quote-discovery__state quote-discovery__state--preview">
             <strong>{currentEstimate()!.best_provider}</strong>
-            <span>{`~${format.number(currentEstimate()!.estimated_receive, 6)} estimated receive`}</span>
-            <span>{`${currentEstimate()!.provider_count} providers checked`}</span>
+            <span>{`~${format.number(currentEstimate()!.estimated_receive, 6)} ${t('quote.estimatedReceive')}`}</span>
+            <span>{`${currentEstimate()!.provider_count} ${t('quote.providersChecked')}`}</span>
             <Show when={props.quote.refreshing()}>
-              <span>Loading live provider routes...</span>
+              <span>{t('swap.liveProvidersChecking')}</span>
             </Show>
           </div>
         </Match>
 
         <Match when={props.quote.error()}>
           <div class="quote-discovery__state quote-discovery__state--error">
-            {describeError(props.quote.error())}
+            {isNoRouteError(props.quote.error()) ? t('quote.noRoute') : describeError(props.quote.error())}
           </div>
         </Match>
 

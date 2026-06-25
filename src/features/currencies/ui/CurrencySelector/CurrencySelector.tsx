@@ -1,6 +1,7 @@
 import { For, Match, Show, Switch, createMemo, createSignal } from 'solid-js';
 import { CURATED_CURRENCY_SECTIONS, type CuratedCurrencyDefinition } from '../../model/curatedCurrencySections';
 import { useCurrencySelector } from '../../model';
+import { useLocale } from '../../../../i18n/locale';
 import type { Currency } from '../../../../types/currency';
 import { getCurrencyIconFallback, getCurrencyIconSrc } from '../../../../utils/currencyIcon';
 import './CurrencySelector.css';
@@ -83,6 +84,7 @@ const renderCurrencyItem = (
 };
 
 export default function CurrencySelector(props: CurrencySelectorProps) {
+  const { t } = useLocale();
   const {
     currencies,
     loading,
@@ -222,7 +224,7 @@ export default function CurrencySelector(props: CurrencySelectorProps) {
         <div class="currency-selector__search">
           <input
             type="text"
-            placeholder="Type a currency or ticker"
+            placeholder={t('currencySelector.searchPlaceholder')}
             value={localSearch()}
             onInput={handleSearch}
             class="currency-selector__search-input"
@@ -232,25 +234,25 @@ export default function CurrencySelector(props: CurrencySelectorProps) {
 
       <Switch>
         <Match when={loading()}>
-          <div class="currency-selector__state">Loading currencies...</div>
+          <div class="currency-selector__state">{t('currencySelector.loading')}</div>
         </Match>
 
         <Match when={error()}>
           <div class="currency-selector__state currency-selector__state--error">
-            Failed to load currencies. Please try again.
+            {t('currencySelector.failed')}
           </div>
         </Match>
 
         <Match when={normalizedSearch() && filteredCurrencies().length === 0}>
           <div class="currency-selector__state">
-            {props.emptyMessage ?? 'No currencies found.'}
+            {props.emptyMessage ?? t('currencySelector.noResults')}
           </div>
         </Match>
 
         <Match when={normalizedSearch() && filteredCurrencies().length > 0}>
           <div class="currency-selector__scroll">
             <div class="currency-selector__section">
-              <div class="currency-selector__section-title">Search Results</div>
+              <div class="currency-selector__section-title">{t('currencySelector.searchResults')}</div>
               <div class="currency-selector__items">
                 <For each={filteredCurrencies()}>
                   {currency => (
@@ -280,7 +282,7 @@ export default function CurrencySelector(props: CurrencySelectorProps) {
             </For>
 
             <div class="currency-selector__more-options">
-              Use our search bar for more options!
+              {t('currencySelector.moreOptions')}
             </div>
           </div>
         </Match>

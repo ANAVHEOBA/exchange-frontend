@@ -12,15 +12,24 @@ import type {
   LogoutResponse,
   RegisterRequest,
   RegisterResponse,
+  RequestVerificationRequest,
+  RequestVerificationResponse,
   User,
   VerifyEmailResponse,
 } from '../types/auth';
 
-const [session, setSession] = createSignal<SessionState>(sessionService.getSession());
+const EMPTY_SESSION: SessionState = {
+  token: null,
+  user: null,
+  isAuthenticated: false,
+};
+
+const [session, setSession] = createSignal<SessionState>(EMPTY_SESSION);
 const [loading, setLoading] = createSignal(false);
 const [initialized, setInitialized] = createSignal(false);
 const [error, setError] = createSignal<string | null>(null);
 const [lastLoginResponse, setLastLoginResponse] = createSignal<LoginResponse | null>(null);
+let initializePromise: Promise<SessionState> | null = null;
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
@@ -53,20 +62,28 @@ const initializeAuth = async (): Promise<SessionState> => {
     return session();
   }
 
+  if (initializePromise) {
+    return initializePromise;
+  }
+
   clearError();
   setLoading(true);
+  initializePromise = (async () => {
+    try {
+      const nextSession = await sessionService.restoreSession();
+      setSession(nextSession);
+      return nextSession;
+    } catch (error) {
+      setStoreError(error);
+      throw error;
+    } finally {
+      initializePromise = null;
+      setLoading(false);
+      setInitialized(true);
+    }
+  })();
 
-  try {
-    const nextSession = await sessionService.restoreSession();
-    setSession(nextSession);
-    return nextSession;
-  } catch (error) {
-    setStoreError(error);
-    throw error;
-  } finally {
-    setLoading(false);
-    setInitialized(true);
-  }
+  return initializePromise;
 };
 
 const register = async (request: RegisterRequest): Promise<RegisterResponse> => {
@@ -97,6 +114,22 @@ const login = async (request: LoginRequest): Promise<LoginSessionResult> => {
     setLastLoginResponse(nextSession.loginResponse);
     setInitialized(true);
     return nextSession;
+  } catch (error) {
+    setStoreError(error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
+const requestVerification = async (
+  request: RequestVerificationRequest,
+): Promise<RequestVerificationResponse> => {
+  clearError();
+  setLoading(true);
+
+  try {
+    return await sessionService.requestVerification(request);
   } catch (error) {
     setStoreError(error);
     throw error;
@@ -180,6 +213,7 @@ export const authStore = {
   initializeAuth,
   register,
   login,
+  requestVerification,
   logout,
   refreshUser,
   verifyEmail,

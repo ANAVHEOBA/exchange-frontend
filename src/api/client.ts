@@ -4,10 +4,12 @@
  */
 
 import { API_CONFIG } from '../config/api';
+import { getIntlLocale, resolveClientPreferredLocale } from '../i18n/config';
 import type { ApiError } from '../types/api';
 
 const ACCESS_TOKEN_STORAGE_KEY = 'exchange.access_token';
 const TOKEN_TYPE_STORAGE_KEY = 'exchange.token_type';
+const CLIENT_ID_STORAGE_KEY = 'exchange.client_id';
 
 export interface StoredAuthToken {
   accessToken: string;
@@ -34,6 +36,7 @@ export class ApiClient {
   private metrics: RequestMetrics[] = [];
   private enableMetrics: boolean;
   private authToken: StoredAuthToken | null = null;
+  private clientId: string | null = null;
 
   constructor() {
     this.baseURL = API_CONFIG.baseURL;
@@ -91,6 +94,10 @@ export class ApiClient {
     this.persistAuthToken(null);
   }
 
+  public getClientId(): string | null {
+    return this.readPersistedClientId();
+  }
+
   private readPersistedAuthToken(): StoredAuthToken | null {
     if (this.authToken) {
       return this.authToken;
@@ -135,13 +142,68 @@ export class ApiClient {
     }
   }
 
+  private readPersistedClientId(): string | null {
+    if (this.clientId) {
+      return this.clientId;
+    }
+
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    try {
+      const value = window.localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+      this.clientId = value?.trim() || null;
+      return this.clientId;
+    } catch {
+      return null;
+    }
+  }
+
+  private persistClientId(clientId: string | null): void {
+    this.clientId = clientId?.trim() || null;
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      if (!this.clientId) {
+        window.localStorage.removeItem(CLIENT_ID_STORAGE_KEY);
+        return;
+      }
+
+      window.localStorage.setItem(CLIENT_ID_STORAGE_KEY, this.clientId);
+    } catch {
+      // Ignore storage errors so identity still works for the current session.
+    }
+  }
+
+  private captureClientId(response: Response): void {
+    const clientId = response.headers.get('x-client-id');
+
+    if (!clientId) {
+      return;
+    }
+
+    this.persistClientId(clientId);
+  }
+
   private buildHeaders(): Record<string, string> {
     const headers = { ...this.headers };
     const authToken = this.readPersistedAuthToken();
+    const clientId = this.readPersistedClientId();
+    const locale = resolveClientPreferredLocale();
 
     if (authToken?.accessToken) {
       headers.Authorization = `${authToken.tokenType} ${authToken.accessToken}`;
     }
+
+    if (clientId) {
+      headers['x-client-id'] = clientId;
+    }
+
+    headers['Accept-Language'] = getIntlLocale(locale);
 
     return headers;
   }
@@ -284,6 +346,7 @@ export class ApiClient {
         method: 'GET',
         headers: this.buildHeaders(),
       }, requestOptions);
+      this.captureClientId(response);
 
       const duration = Math.round(performance.now() - startTime);
       this.logMetrics({
@@ -323,6 +386,7 @@ export class ApiClient {
         headers: this.buildHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       }, requestOptions);
+      this.captureClientId(response);
 
       const duration = Math.round(performance.now() - startTime);
       this.logMetrics({

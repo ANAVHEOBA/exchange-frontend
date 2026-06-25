@@ -3,6 +3,7 @@ import { useSearchParams } from '@solidjs/router';
 import Header from '../components/Header/Header';
 import SiteFooter from '../components/SiteFooter/SiteFooter';
 import SwapModal from '../components/SwapModal/SwapModal';
+import { useLocale } from '../i18n/locale';
 import type { RateType } from '../types/rate';
 import './exchange.css';
 
@@ -12,20 +13,18 @@ const resolveRateType = (value?: string): RateType => {
 
 export default function ExchangePage() {
   const [searchParams] = useSearchParams();
+  const { t } = useLocale();
 
   return (
     <main class="exchange-page">
-      <Title>Confirm Exchange | ASSETAR</Title>
+      <Title>{`${t('exchange.title')} | ASSETAR`}</Title>
       <Header />
 
       <section class="exchange-page__shell">
         <div class="exchange-page__intro">
-          <div class="exchange-page__eyebrow">Exchange</div>
-          <h1 class="exchange-page__title">Compare routes on a dedicated screen.</h1>
-          <p class="exchange-page__copy">
-            Review your pair, add addresses, and choose between floating and fixed
-            provider routes without stacking the whole flow under the homepage hero.
-          </p>
+          <div class="exchange-page__eyebrow">{t('exchange.eyebrow')}</div>
+          <h1 class="exchange-page__title">{t('exchange.title')}</h1>
+          <p class="exchange-page__copy">{t('exchange.copy')}</p>
         </div>
 
         <div class="exchange-page__content">

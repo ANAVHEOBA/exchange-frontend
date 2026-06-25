@@ -1,5 +1,5 @@
 import { Title } from '@solidjs/meta';
-import { Show, createSignal, onMount } from 'solid-js';
+import { Show, createMemo, createSignal, onMount } from 'solid-js';
 import { swapApi } from '../api/endpoints/swap';
 import type { DonationTargetResponse } from '../types/swap';
 import Header from '../components/Header/Header';
@@ -13,7 +13,7 @@ import './about.css';
 export default function About() {
   const { t } = useLocale();
   const [donationTarget, setDonationTarget] = createSignal<DonationTargetResponse | null>(null);
-  const reassurancePanels = [
+  const reassurancePanels = createMemo(() => [
     {
       title: t('about.whyCardOneTitle'),
       copy: t('about.whyCardOneCopy'),
@@ -22,8 +22,8 @@ export default function About() {
       title: t('about.whyCardTwoTitle'),
       copy: t('about.whyCardTwoCopy'),
     },
-  ];
-  const donationSteps = [
+  ]);
+  const donationSteps = createMemo(() => [
     {
       title: t('about.stepOneTitle'),
       copy: t('about.stepOneCopy'),
@@ -36,12 +36,12 @@ export default function About() {
       title: t('about.stepThreeTitle'),
       copy: t('about.stepThreeCopy'),
     },
-  ];
-  const contactPoints = [
+  ]);
+  const contactPoints = createMemo(() => [
     { label: t('about.supportLabel'), href: 'mailto:support@assetar.app', value: 'support@assetar.app' },
     { label: t('about.generalLabel'), href: 'mailto:mail@assetar.app', value: 'mail@assetar.app' },
-  ];
-  const trustBadges = [t('about.badgeOne'), t('about.badgeTwo'), t('about.badgeThree')];
+  ]);
+  const trustBadges = createMemo(() => [t('about.badgeOne'), t('about.badgeTwo'), t('about.badgeThree')]);
 
   onMount(async () => {
     try {
@@ -54,7 +54,7 @@ export default function About() {
 
   return (
     <main class="about-page">
-      <Title>About | ASSETAR</Title>
+      <Title>{`${t('about.eyebrow')} | ASSETAR`}</Title>
       <Header />
 
       <section class="about-page__hero">
@@ -67,13 +67,13 @@ export default function About() {
               <p class="about-page__copy">{t('about.copyTwo')}</p>
 
               <div class="about-page__badge-row" aria-label="Assetar route highlights">
-                {trustBadges.map(badge => (
+                {trustBadges().map(badge => (
                   <span class="about-page__badge">{badge}</span>
                 ))}
               </div>
 
               <div class="about-page__contact-card" aria-label="Support contacts">
-                {contactPoints.map(contact => (
+                {contactPoints().map(contact => (
                   <a class="about-page__contact-row" href={contact.href}>
                     <span class="about-page__contact-label">{contact.label}</span>
                     <strong class="about-page__contact-value">{contact.value}</strong>
@@ -93,13 +93,13 @@ export default function About() {
                     return (
                       <>
                         <p class="about-page__address-network">
-                          {hostedTarget.label ?? 'Donation target'} ·{' '}
+                          {hostedTarget.label ?? t('about.donationAddress')} ·{' '}
                           {hostedTarget.to.toUpperCase()} / {hostedTarget.network_to}
                         </p>
                         <p class="about-page__address-value">{hostedTarget.recipient_address}</p>
                         <Show when={hostedTarget.recipient_extra_id}>
                           <p class="about-page__address-extra">
-                            Extra ID: {hostedTarget.recipient_extra_id}
+                            {t('donation.extraId')}: {hostedTarget.recipient_extra_id}
                           </p>
                         </Show>
                       </>
@@ -123,7 +123,7 @@ export default function About() {
             <h2 class="about-page__panel-title">{t('about.whyTitle')}</h2>
 
             <div class="about-page__panel-stack">
-              {reassurancePanels.map(panel => (
+              {reassurancePanels().map(panel => (
                 <div class="about-page__panel-card">
                   <h3 class="about-page__panel-card-title">{panel.title}</h3>
                   <p class="about-page__panel-card-copy">{panel.copy}</p>
@@ -137,7 +137,7 @@ export default function About() {
             <h2 class="about-page__panel-title">{t('about.stepsTitle')}</h2>
 
             <div class="about-page__steps">
-              {donationSteps.map((step, index) => (
+              {donationSteps().map((step, index) => (
                 <div class="about-page__step">
                   <div class="about-page__step-index">
                     {index + 1}

@@ -4,7 +4,7 @@
  */
 
 import { authStore } from '../stores/authStore';
-import type { LoginRequest, RegisterRequest } from '../types/auth';
+import type { LoginRequest, RegisterRequest, RequestVerificationRequest } from '../types/auth';
 
 export function useAuth() {
   return {
@@ -20,6 +20,8 @@ export function useAuth() {
     initialize: authStore.initializeAuth,
     register: (request: RegisterRequest) => authStore.register(request),
     login: (request: LoginRequest) => authStore.login(request),
+    requestVerification: (request: RequestVerificationRequest) =>
+      authStore.requestVerification(request),
     logout: authStore.logout,
     refreshUser: authStore.refreshUser,
     verifyEmail: authStore.verifyEmail,

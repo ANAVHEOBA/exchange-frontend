@@ -11,8 +11,11 @@ import type {
   LoginRequest,
   LoginResponse,
   LogoutResponse,
+  MeResponse,
   RegisterRequest,
   RegisterResponse,
+  RequestVerificationRequest,
+  RequestVerificationResponse,
   User,
   VerifyEmailResponse,
 } from '../../types/auth';
@@ -80,10 +83,23 @@ const persistUser = (user: User | null): void => {
   }
 };
 
+const toSessionUser = (response: MeResponse, fallbackUser?: User | null): User => ({
+  id: fallbackUser?.id ?? '',
+  email: response.email,
+  username: response.username ?? fallbackUser?.username ?? '',
+  email_verified: fallbackUser?.email_verified ?? true,
+  two_factor_enabled: fallbackUser?.two_factor_enabled ?? false,
+  created_at: fallbackUser?.created_at ?? '',
+  updated_at: fallbackUser?.updated_at ?? '',
+  total_trades: response.total_trades,
+  traded_value_btc: response.traded_value_btc,
+});
+
 const loadCurrentUser = async (): Promise<User> => {
   const response = await authApi.getCurrentUser();
-  persistUser(response.user);
-  return response.user;
+  const nextUser = toSessionUser(response, readStoredUser());
+  persistUser(nextUser);
+  return nextUser;
 };
 
 const clearSession = (): void => {
@@ -155,6 +171,12 @@ export const sessionService = {
 
       throw error;
     }
+  },
+
+  async requestVerification(
+    request: RequestVerificationRequest,
+  ): Promise<RequestVerificationResponse> {
+    return authApi.requestVerification(request);
   },
 
   async verifyEmail(token: string): Promise<VerifyEmailResponse> {

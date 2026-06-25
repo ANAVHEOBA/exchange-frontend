@@ -1,3 +1,4 @@
+import { createMemo } from "solid-js";
 import { useLocale } from "../../i18n/locale";
 import "./ExchangeGuide.css";
 
@@ -7,7 +8,7 @@ export interface ExchangeGuideProps {
 
 export default function ExchangeGuide(props: ExchangeGuideProps) {
   const { t } = useLocale();
-  const highlights = [
+  const highlights = createMemo(() => [
     {
       eyebrow: t('guide.highlightOneEyebrow'),
       title: t('guide.highlightOneTitle'),
@@ -28,8 +29,8 @@ export default function ExchangeGuide(props: ExchangeGuideProps) {
         t('guide.highlightTwoPointThree'),
       ],
     },
-  ];
-  const steps = [
+  ]);
+  const steps = createMemo(() => [
     {
       number: "01",
       title: t('guide.stepOneTitle'),
@@ -45,7 +46,7 @@ export default function ExchangeGuide(props: ExchangeGuideProps) {
       title: t('guide.stepThreeTitle'),
       description: t('guide.stepThreeDescription'),
     },
-  ];
+  ]);
 
   return (
     <section class="exchange-guide" id="how-it-works">
@@ -56,7 +57,7 @@ export default function ExchangeGuide(props: ExchangeGuideProps) {
       </div>
 
       <div class="exchange-guide__highlights">
-        {highlights.map(highlight => (
+        {highlights().map(highlight => (
           <article class="exchange-guide__card">
             <p class="exchange-guide__card-kicker">{highlight.eyebrow}</p>
             <h3 class="exchange-guide__card-title">{highlight.title}</h3>
@@ -83,7 +84,7 @@ export default function ExchangeGuide(props: ExchangeGuideProps) {
       </div>
 
       <div class="exchange-guide__steps">
-        {steps.map(step => (
+        {steps().map(step => (
           <article class="exchange-guide__step">
             <span class="exchange-guide__step-number">{step.number}</span>
             <h4 class="exchange-guide__step-title">{step.title}</h4>

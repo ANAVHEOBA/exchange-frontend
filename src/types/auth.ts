@@ -14,6 +14,8 @@ export interface User {
   two_factor_enabled: boolean;   // 2FA status
   created_at: string;            // ISO 8601 creation time
   updated_at: string;            // ISO 8601 last update time
+  total_trades?: number;         // Dashboard total trades
+  traded_value_btc?: number;     // Dashboard traded value in BTC
 }
 
 export interface RegisterRequest {
@@ -25,6 +27,14 @@ export interface RegisterRequest {
 
 export interface RegisterResponse {
   user: User;                    // Created user object
+}
+
+export interface RequestVerificationRequest {
+  email: string;                 // Email address for resending verification
+}
+
+export interface RequestVerificationResponse {
+  message: string;               // Confirmation message
 }
 
 export interface LoginRequest {
@@ -48,7 +58,28 @@ export interface LogoutResponse {
 }
 
 export interface MeResponse {
-  user: User;                    // Current user object
+  email: string;                 // Current user email
+  username?: string | null;      // Current user username
+  total_trades: number;          // Dashboard total trades
+  traded_value_btc: number;      // Dashboard traded value
+}
+
+export interface ForgotPasswordRequest {
+  email: string;                 // Account email address
+}
+
+export interface ForgotPasswordResponse {
+  message: string;               // Reset request confirmation
+}
+
+export interface ResetPasswordRequest {
+  token: string;                 // Password reset token
+  password: string;              // New password
+  password_confirm: string;      // Password confirmation
+}
+
+export interface ResetPasswordResponse {
+  message: string;               // Password reset confirmation
 }
 
 export interface VerifyEmailRequest {
