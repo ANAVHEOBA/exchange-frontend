@@ -1,32 +1,68 @@
 import { Title } from '@solidjs/meta';
 import { useParams, useSearchParams } from '@solidjs/router';
-import { Show, createMemo, createResource, createSignal, onCleanup, onMount } from 'solid-js';
+import QRCode from 'qrcode';
+import { Show, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from 'solid-js';
 import Header from '../../../components/Header/Header';
 import SiteFooter from '../../../components/SiteFooter/SiteFooter';
 import { giftcardsApi } from '../../../api/endpoints/giftcards';
-import { useLocale } from '../../../i18n/locale';
+import {
+  buildGiftcardPaymentUri,
+  shouldStopGiftcardOrderPolling,
+  type GiftcardQrMode,
+} from './order-status.model';
 import type { GiftCardOrderResponse } from '../../../types/giftcard';
 import './order-status.css';
 
-const formatTimestamp = (value?: string | null): string => {
+const safeDecode = (value?: string | null): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const readSearchParam = (value?: string | string[]): string | undefined => {
+  return Array.isArray(value) ? value[0] : value;
+};
+
+const formatUtcTime = (value?: Date | string | null): string => {
   if (!value) {
     return '—';
   }
 
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return '—';
   }
 
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
+  return `${new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'UTC',
+  }).format(date)} UTC`;
+};
+
+const addMinutes = (value?: string | null, minutes = 15): Date | null => {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return new Date(date.getTime() + minutes * 60_000);
 };
 
 const titleCase = (value?: string | null): string => {
   if (!value) {
-    return 'Checking';
+    return 'Waiting for funds';
   }
 
   return value
@@ -36,73 +72,133 @@ const titleCase = (value?: string | null): string => {
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
-const getStatusTone = (value?: string | null): 'neutral' | 'warning' | 'success' | 'danger' => {
-  const normalized = value?.trim().toLowerCase() ?? '';
-
-  if (
-    normalized.includes('complete') ||
-    normalized.includes('deliver') ||
-    normalized.includes('redeem') ||
-    normalized.includes('sent')
-  ) {
-    return 'success';
+const formatCryptoValue = (value?: number | null): string => {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return '—';
   }
 
-  if (
-    normalized.includes('fail') ||
-    normalized.includes('expired') ||
-    normalized.includes('refund') ||
-    normalized.includes('cancel')
-  ) {
-    return 'danger';
-  }
-
-  if (
-    normalized.includes('wait') ||
-    normalized.includes('confirm') ||
-    normalized.includes('queue') ||
-    normalized.includes('pending')
-  ) {
-    return 'warning';
-  }
-
-  return 'neutral';
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 12,
+    useGrouping: false,
+  }).format(value);
 };
 
-const shouldStopPolling = (order?: GiftCardOrderResponse | null): boolean => {
-  if (!order) {
+const parseNumericAmount = (value?: string | null): number | null => {
+  const normalized = value?.trim().replaceAll(',', '') ?? '';
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/-?\d+(?:\.\d+)?/);
+  if (!match) {
+    return null;
+  }
+
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeCardValue = (
+  detailsValue?: string | null,
+  queryValue?: string | null,
+  queryCurrency?: string | null,
+): string => {
+  const value = queryValue?.trim();
+  const currency = queryCurrency?.trim().toUpperCase();
+  if (value && currency) {
+    const parsed = Number(value);
+    const amount = Number.isFinite(parsed) ? parsed.toFixed(2) : value;
+    return `${amount} ${currency}`;
+  }
+
+  const detail = detailsValue?.trim();
+  if (detail) {
+    return detail;
+  }
+
+  return '—';
+};
+
+const nearlyEqual = (left: number, right: number): boolean => {
+  return Math.abs(left - right) <= Math.max(0.000001, Math.abs(right) * 0.0001);
+};
+
+const hasProviderCryptoAmount = (
+  record: GiftCardOrderResponse,
+  requestedCardValue?: string | null,
+): boolean => {
+  const amount = record.amount_from;
+  if (!Number.isFinite(amount) || amount <= 0 || !record.deposit_address) {
     return false;
   }
 
-  const normalized = order.status.trim().toLowerCase();
-  return (
-    normalized.includes('complete') ||
-    normalized.includes('deliver') ||
-    normalized.includes('redeem') ||
-    normalized.includes('fail') ||
-    normalized.includes('expired') ||
-    normalized.includes('refund') ||
-    normalized.includes('cancel')
-  );
+  const requestedAmount = parseNumericAmount(requestedCardValue);
+  if (requestedAmount !== null && nearlyEqual(amount, requestedAmount)) {
+    return false;
+  }
+
+  const detailAmount = parseNumericAmount(record.details?.value);
+  if (detailAmount !== null && nearlyEqual(amount, detailAmount)) {
+    return false;
+  }
+
+  if (record.ticker_from.toLowerCase() === 'xmr' && amount >= 5) {
+    return false;
+  }
+
+  return true;
 };
 
 export default function GiftCardOrderStatusPage() {
   const params = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const { t } = useLocale();
   const [refreshing, setRefreshing] = createSignal(false);
   const [copiedField, setCopiedField] = createSignal<string | null>(null);
+  const [qrMode, setQrMode] = createSignal<GiftcardQrMode>('address');
+  const [qrDataUrl, setQrDataUrl] = createSignal('');
+  const [qrLoading, setQrLoading] = createSignal(false);
+  const [qrError, setQrError] = createSignal<string | null>(null);
+  const [now, setNow] = createSignal(new Date());
+  const [checkoutImageFailed, setCheckoutImageFailed] = createSignal(false);
+  const [stableOrder, setStableOrder] = createSignal<GiftCardOrderResponse | null>(null);
+  const [stableOrderRef, setStableOrderRef] = createSignal('');
 
-  const orderRef = createMemo(() => decodeURIComponent(params.id ?? '').trim());
-  const productLabel = createMemo(() => {
-    const value = searchParams.product?.trim();
-    return value ? decodeURIComponent(value) : null;
-  });
+  const orderRef = createMemo(() => safeDecode(params.id)?.trim() ?? '');
+  const productLabel = createMemo(() => safeDecode(readSearchParam(searchParams.product))?.trim() || null);
+  const productImage = createMemo(() => safeDecode(readSearchParam(searchParams.image))?.trim() || null);
+  const visibleProductImage = createMemo(() => (checkoutImageFailed() ? null : productImage()));
+  const queryCurrency = createMemo(() => safeDecode(readSearchParam(searchParams.currency))?.trim() || null);
+  const queryValue = createMemo(() => safeDecode(readSearchParam(searchParams.value))?.trim() || null);
 
   const [order, { refetch }] = createResource(orderRef, giftcardsApi.getOrderStatus);
+  const currentOrder = createMemo(() => {
+    const stable = stableOrder();
+    if (stable && stableOrderRef() === orderRef()) {
+      return stable;
+    }
+
+    return order() ?? null;
+  });
+
+  createEffect(() => {
+    const nextOrder = order();
+    if (!nextOrder) {
+      return;
+    }
+
+    setStableOrder(nextOrder);
+    setStableOrderRef(orderRef());
+  });
+
+  createEffect(() => {
+    productImage();
+    setCheckoutImageFailed(false);
+  });
 
   let pollTimer: number | undefined;
+  let timeTimer: number | undefined;
   let copiedTimer: number | undefined;
+  let qrRequest = 0;
 
   const refreshOrder = async () => {
     setRefreshing(true);
@@ -113,29 +209,54 @@ export default function GiftCardOrderStatusPage() {
     }
   };
 
+  const writeToClipboard = async (value: string): Promise<boolean> => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      return document.execCommand('copy');
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  };
+
   const copyValue = async (key: string, value?: string | null) => {
-    if (!value || typeof navigator === 'undefined' || !navigator.clipboard) {
+    if (!value) {
       return;
     }
 
-    await navigator.clipboard.writeText(value);
-    setCopiedField(key);
+    try {
+      if (!await writeToClipboard(value)) {
+        return;
+      }
 
-    if (copiedTimer) {
-      window.clearTimeout(copiedTimer);
+      setCopiedField(key);
+      if (copiedTimer !== undefined) {
+        window.clearTimeout(copiedTimer);
+      }
+      copiedTimer = window.setTimeout(() => setCopiedField(null), 1800);
+    } catch {
+      // Keep the text visible for manual copy.
     }
-
-    copiedTimer = window.setTimeout(() => {
-      setCopiedField(null);
-    }, 1500);
   };
 
   onMount(() => {
     pollTimer = window.setInterval(() => {
-      if (!shouldStopPolling(order())) {
+      if (!shouldStopGiftcardOrderPolling(currentOrder())) {
         void refetch();
       }
-    }, 12000);
+    }, 3000);
+    timeTimer = window.setInterval(() => setNow(new Date()), 30000);
   });
 
   onCleanup(() => {
@@ -143,226 +264,308 @@ export default function GiftCardOrderStatusPage() {
       window.clearInterval(pollTimer);
     }
 
-    if (copiedTimer) {
+    if (timeTimer) {
+      window.clearInterval(timeTimer);
+    }
+
+    if (copiedTimer !== undefined) {
       window.clearTimeout(copiedTimer);
+    }
+
+    qrRequest += 1;
+  });
+
+  const paymentUri = createMemo(() =>
+    buildGiftcardPaymentUri(
+      currentOrder()?.ticker_from,
+      currentOrder()?.network_from,
+      currentOrder()?.deposit_address ?? undefined,
+      currentOrder()?.amount_from ?? null,
+    ),
+  );
+  const qrPayload = createMemo(() => {
+    if (qrMode() === 'payment' && paymentUri()) {
+      return paymentUri()!;
+    }
+
+    return currentOrder()?.deposit_address ?? '';
+  });
+
+  createEffect(() => {
+    if (!paymentUri() && qrMode() === 'payment') {
+      setQrMode('address');
     }
   });
 
-  const statusTone = createMemo(() => getStatusTone(order()?.status));
-  const deliverablesReady = createMemo(() => {
-    const details = order()?.details;
-    return Boolean(details?.activation_link || details?.redeem_code);
+  createEffect(() => {
+    const payload = qrPayload();
+    const request = ++qrRequest;
+
+    if (!payload) {
+      setQrDataUrl('');
+      setQrError(null);
+      return;
+    }
+
+    setQrLoading(true);
+    setQrError(null);
+    void QRCode.toDataURL(payload, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 390,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    }).then(url => {
+      if (request === qrRequest) {
+        setQrDataUrl(url);
+      }
+    }).catch(() => {
+      if (request === qrRequest) {
+        setQrError('QR generation failed. Copy the address instead.');
+      }
+    }).finally(() => {
+      if (request === qrRequest) {
+        setQrLoading(false);
+      }
+    });
   });
 
   return (
     <main class="giftcard-order-page">
-      <Title>{`${t('giftcards.statusPageTitle')} | ASSETAR`}</Title>
+      <Title>Gift Card Checkout | ASSETAR</Title>
       <Header />
-
-      <section class="giftcard-order-page__hero">
-        <div class="giftcard-order-page__shell">
-          <div class="giftcard-order-page__eyebrow">{t('giftcards.statusEyebrow')}</div>
-          <h1 class="giftcard-order-page__title">{t('giftcards.statusTitle')}</h1>
-          <p class="giftcard-order-page__copy">{t('giftcards.statusCopy')}</p>
-        </div>
-      </section>
 
       <section class="giftcard-order-page__content">
         <div class="giftcard-order-page__shell">
           <Show
             when={orderRef()}
-            fallback={<div class="giftcard-order-card giftcard-order-card--empty">{t('giftcards.lookupMissing')}</div>}
+            fallback={<div class="giftcard-order-card giftcard-order-card--empty">No gift card order id provided.</div>}
           >
             <Show
-              when={!order.loading || order()}
-              fallback={<div class="giftcard-order-card giftcard-order-card--empty">{t('giftcards.loadingOrder')}</div>}
+              when={currentOrder() || !order.loading}
+              fallback={<div class="giftcard-order-card giftcard-order-card--empty">Loading gift card order...</div>}
             >
               <Show
-                when={order()}
+                when={currentOrder()}
                 fallback={
                   <div class="giftcard-order-card giftcard-order-card--empty giftcard-order-card--error">
-                    {String(order.error?.message ?? t('giftcards.loadingOrder'))}
+                    {String(order.error?.message ?? 'Loading gift card order...')}
                   </div>
                 }
               >
-                {record => (
-                  <div class="giftcard-order-page__layout">
-                    <div class="giftcard-order-card giftcard-order-card--primary">
-                      <div class="giftcard-order-card__header">
-                        <div>
-                          <div class="giftcard-order-card__kicker">{t('giftcards.orderSummary')}</div>
-                          <h2 class="giftcard-order-card__title">
-                            {productLabel() || record().product_id || record().provider || t('giftcards.statusPageTitle')}
-                          </h2>
-                          <p class="giftcard-order-card__provider">
-                            {record().provider || 'Assetar'} • {titleCase(record().status)}
+                {record => {
+                  const cardName = () => productLabel() || record().product_id || 'Gift Card';
+                  const cardValue = () =>
+                    normalizeCardValue(record().details?.value, queryValue(), record().currency_code || queryCurrency());
+                  const coinName = () => record().coin_from || record().ticker_from.toUpperCase();
+                  const paymentReady = () => hasProviderCryptoAmount(record(), queryValue());
+                  const expiresAt = () => addMinutes(record().created_at);
+                  const currentStatus = () => {
+                    const normalized = record().status.toLowerCase();
+                    if (
+                      normalized.includes('wait') ||
+                      normalized.includes('new') ||
+                      normalized.includes('confirm') ||
+                      normalized.includes('queue') ||
+                      normalized.includes('creating') ||
+                      normalized.includes('pending')
+                    ) {
+                      return 'Waiting for funds. No deposit confirmation yet on the blockchain. Refresh your transaction status with the button below:';
+                    }
+
+                    return `${titleCase(record().status)}. Refresh your transaction status with the button below:`;
+                  };
+
+                  return (
+                    <div class="giftcard-checkout">
+                      <div class="giftcard-checkout__main">
+                        <section class="giftcard-order-card giftcard-checkout__review-card">
+                          <h1>Review your Purchase:</h1>
+
+                          <div class="giftcard-checkout__review-table">
+                            <div>
+                              <span>Email:</span>
+                              <strong>{record().details?.email || record().recipient_email || '—'}</strong>
+                            </div>
+                            <div>
+                              <span>Gift Card:</span>
+                              <strong>{cardName()}</strong>
+                            </div>
+                            <div>
+                              <span>Card Value:</span>
+                              <strong>{cardValue()}</strong>
+                            </div>
+                          </div>
+
+                          <div class="giftcard-checkout__warning">
+                            <strong>Warning:</strong>
+                            <p>
+                              Do NOT use a VPN or Tor when redeeming, or your redeem code may be blocked! Also avoid
+                              using AdBlockers or Brave Shield, or you might get errors from the provider.
+                            </p>
+                          </div>
+
+                          <Show
+                            when={paymentReady()}
+                            fallback={
+                              <div class="giftcard-checkout__pending-payment">
+                                <div class="giftcard-checkout__pending-spinner" />
+                                <div>
+                                  <strong>Preparing payment instructions...</strong>
+                                  <p>
+                                    Assetar accepted the order and is getting the live deposit address from the provider.
+                                    This page refreshes automatically.
+                                  </p>
+                                </div>
+                              </div>
+                            }
+                          >
+                            <p class="giftcard-checkout__transfer-copy">
+                              Transfer exactly <strong>{formatCryptoValue(record().amount_from)}</strong> {coinName()} to
+                              this address: <span title="Send only the selected asset on the selected network.">ⓘ</span>
+                            </p>
+
+                            <div class="giftcard-checkout__address-box">
+                              <div class="giftcard-checkout__address-actions">
+                                <span>Address</span>
+                                <button type="button" onClick={() => void copyValue('address', record().deposit_address)}>
+                                  {copiedField() === 'address' ? 'Copied' : 'Copy'}
+                                </button>
+                              </div>
+                              <code>{record().deposit_address}</code>
+                            </div>
+
+                            <Show when={record().deposit_extra_id}>
+                              <div class="giftcard-checkout__address-box giftcard-checkout__address-box--memo">
+                                <div class="giftcard-checkout__address-actions">
+                                  <span>Memo / Extra ID</span>
+                                  <button type="button" onClick={() => void copyValue('memo', record().deposit_extra_id)}>
+                                    {copiedField() === 'memo' ? 'Copied' : 'Copy'}
+                                  </button>
+                                </div>
+                                <code>{record().deposit_extra_id}</code>
+                              </div>
+                            </Show>
+
+                            <div class="giftcard-checkout__qr-panel">
+                              <div class="giftcard-checkout__qr-label">QR</div>
+                              <div class="giftcard-checkout__qr-canvas" aria-live="polite">
+                                <Show when={qrLoading()}>
+                                  <div class="giftcard-checkout__qr-loading">Generating QR...</div>
+                                </Show>
+                                <Show when={!qrLoading() && qrDataUrl()}>
+                                  <img
+                                    src={qrDataUrl()}
+                                    alt={qrMode() === 'payment' ? 'URI with amount QR code' : 'Address QR code'}
+                                  />
+                                </Show>
+                                <Show when={qrError()}>
+                                  <div class="giftcard-checkout__qr-error">{qrError()}</div>
+                                </Show>
+                              </div>
+                              <div class="giftcard-checkout__qr-tabs" role="tablist" aria-label="QR content">
+                                <button
+                                  classList={{ active: qrMode() === 'address' }}
+                                  type="button"
+                                  onClick={() => setQrMode('address')}
+                                >
+                                  Address
+                                </button>
+                                <Show when={paymentUri()}>
+                                  <button
+                                    classList={{ active: qrMode() === 'payment' }}
+                                    type="button"
+                                    onClick={() => setQrMode('payment')}
+                                  >
+                                    URI with Amount
+                                  </button>
+                                </Show>
+                              </div>
+                            </div>
+                          </Show>
+
+                          <p class="giftcard-checkout__status-copy">
+                            <strong>Status:</strong> {currentStatus()}
                           </p>
-                        </div>
-                        <div class={`giftcard-order-card__status giftcard-order-card__status--${statusTone()}`}>
-                          {titleCase(record().status)}
-                        </div>
+
+                          <button
+                            class="giftcard-checkout__refresh"
+                            disabled={refreshing()}
+                            onClick={() => void refreshOrder()}
+                            type="button"
+                          >
+                            {refreshing() ? 'Refreshing...' : 'Refresh Transaction Status'}
+                          </button>
+                        </section>
                       </div>
 
-                      <div class="giftcard-order-card__summary-grid">
-                        <div class="giftcard-order-card__summary-box">
-                          <span>{t('giftcards.sendAmount')}</span>
-                          <strong>{record().amount_from} {record().ticker_from.toUpperCase()}</strong>
-                          <small>{record().network_from}</small>
-                        </div>
-
-                        <div class="giftcard-order-card__summary-box">
-                          <span>{t('giftcards.deliveryValue')}</span>
-                          <strong>{record().details?.value || '—'}</strong>
-                          <small>{productLabel() || record().product_id || record().order_kind}</small>
-                        </div>
-                      </div>
-
-                      <div class="giftcard-order-card__field-grid">
-                        <div class="giftcard-order-card__field">
-                          <span>{t('giftcards.orderReference')}</span>
-                          <code>{record().order_id}</code>
-                        </div>
-
-                        <Show when={record().trade_id}>
-                          <div class="giftcard-order-card__field">
-                            <span>{t('giftcards.providerTradeId')}</span>
-                            <code>{record().trade_id}</code>
+                      <aside class="giftcard-checkout__side">
+                        <section class="giftcard-order-card giftcard-checkout__expiry-card">
+                          <h2>Be aware of your transaction&apos;s Expiration Time:</h2>
+                          <div class="giftcard-checkout__time-table">
+                            <div>
+                              <span>Created at:</span>
+                              <strong>{formatUtcTime(record().created_at)}</strong>
+                            </div>
+                            <div>
+                              <span>Current time:</span>
+                              <strong>{formatUtcTime(now())}</strong>
+                            </div>
+                            <div>
+                              <span>Expires at:</span>
+                              <strong>{formatUtcTime(expiresAt())}</strong>
+                            </div>
                           </div>
-                        </Show>
-                      </div>
+                          <p>
+                            We recommend you set priority to your transfers to avoid the transaction expiring before your
+                            deposit is received
+                          </p>
+                        </section>
 
-                      <Show when={record().last_error}>
-                        <div class="giftcard-order-card__alert giftcard-order-card__alert--danger">
-                          <strong>{t('giftcards.lastError')}:</strong> {record().last_error}
-                        </div>
-                      </Show>
+                        <section class="giftcard-order-card giftcard-checkout__details-card">
+                          <h2>Write down your transaction details:</h2>
+                          <div class="giftcard-checkout__time-table">
+                            <div>
+                              <span>ID at Assetar:</span>
+                              <strong>{record().trade_id || record().order_id}</strong>
+                            </div>
+                            <div>
+                              <span>Assetar Support:</span>
+                              <strong>@AssetarSupportBot<br />support@assetar.app</strong>
+                            </div>
+                            <div>
+                              <span>Exchange:</span>
+                              <strong>{record().provider || 'CakePay'}</strong>
+                            </div>
+                          </div>
+                          <p>
+                            <strong>Note:</strong> You are a counterparty to the chosen exchange for this trade.
+                            Assetar only provides software for interacting with the swap provider. By trading with them,
+                            you agree to their Terms of Service
+                          </p>
+                        </section>
 
-                      <Show when={record().queued}>
-                        <div class="giftcard-order-card__alert giftcard-order-card__alert--warning">
-                          <strong>{t('giftcards.queueState')}:</strong> {record().retryable ? t('giftcards.yes') : t('giftcards.no')}
-                        </div>
-                      </Show>
+                        <section class="giftcard-order-card giftcard-checkout__image-card">
+                          <Show
+                            when={visibleProductImage()}
+                            fallback={
+                              <div class="giftcard-checkout__image-fallback">
+                                {cardName().slice(0, 1).toUpperCase()}
+                              </div>
+                            }
+                          >
+                            {image => (
+                              <img
+                                src={image()}
+                                alt={cardName()}
+                                onError={() => setCheckoutImageFailed(true)}
+                              />
+                            )}
+                          </Show>
+                        </section>
+                      </aside>
                     </div>
-
-                    <div class="giftcard-order-page__sidebar">
-                      <div class="giftcard-order-card">
-                        <h3 class="giftcard-order-card__section-title">{t('giftcards.paymentInstructions')}</h3>
-
-                        <div class="giftcard-order-card__field-stack">
-                          <div class="giftcard-order-card__field">
-                            <div class="giftcard-order-card__field-head">
-                              <span>{t('giftcards.payTo')}</span>
-                              <button type="button" onClick={() => void copyValue('deposit', record().deposit_address)}>
-                                {copiedField() === 'deposit' ? t('giftcards.copied') : t('giftcards.copy')}
-                              </button>
-                            </div>
-                            <code>{record().deposit_address || '—'}</code>
-                          </div>
-
-                          <Show when={record().deposit_extra_id}>
-                            <div class="giftcard-order-card__field">
-                              <div class="giftcard-order-card__field-head">
-                                <span>{t('giftcards.depositMemo')}</span>
-                                <button type="button" onClick={() => void copyValue('memo', record().deposit_extra_id)}>
-                                  {copiedField() === 'memo' ? t('giftcards.copied') : t('giftcards.copy')}
-                                </button>
-                              </div>
-                              <code>{record().deposit_extra_id}</code>
-                            </div>
-                          </Show>
-                        </div>
-                      </div>
-
-                      <div class="giftcard-order-card">
-                        <h3 class="giftcard-order-card__section-title">{t('giftcards.deliveryDetails')}</h3>
-
-                        <div class="giftcard-order-card__field-stack">
-                          <Show when={record().details?.email}>
-                            <div class="giftcard-order-card__field">
-                              <span>{t('giftcards.deliveryEmail')}</span>
-                              <code>{record().details?.email}</code>
-                            </div>
-                          </Show>
-
-                          <Show when={record().details?.redeem_code}>
-                            <div class="giftcard-order-card__field">
-                              <div class="giftcard-order-card__field-head">
-                                <span>{t('giftcards.redeemCode')}</span>
-                                <button type="button" onClick={() => void copyValue('redeem', record().details?.redeem_code)}>
-                                  {copiedField() === 'redeem' ? t('giftcards.copied') : t('giftcards.copy')}
-                                </button>
-                              </div>
-                              <code>{record().details?.redeem_code}</code>
-                            </div>
-                          </Show>
-
-                          <Show when={record().details?.activation_link}>
-                            <div class="giftcard-order-card__field">
-                              <div class="giftcard-order-card__field-head">
-                                <span>{t('giftcards.activationLink')}</span>
-                                <button type="button" onClick={() => void copyValue('activation', record().details?.activation_link)}>
-                                  {copiedField() === 'activation' ? t('giftcards.copied') : t('giftcards.copy')}
-                                </button>
-                              </div>
-                              <a href={record().details?.activation_link || '#'} target="_blank" rel="noreferrer">
-                                {record().details?.activation_link}
-                              </a>
-                            </div>
-                          </Show>
-
-                          <Show when={record().provider_password}>
-                            <div class="giftcard-order-card__field">
-                              <div class="giftcard-order-card__field-head">
-                                <span>{t('giftcards.providerPassword')}</span>
-                                <button type="button" onClick={() => void copyValue('password', record().provider_password)}>
-                                  {copiedField() === 'password' ? t('giftcards.copied') : t('giftcards.copy')}
-                                </button>
-                              </div>
-                              <code>{record().provider_password}</code>
-                            </div>
-                          </Show>
-                        </div>
-
-                        <Show when={deliverablesReady()}>
-                          <div class="giftcard-order-card__alert giftcard-order-card__alert--success">
-                            {t('giftcards.terminalNote')}
-                          </div>
-                        </Show>
-                      </div>
-
-                      <div class="giftcard-order-card">
-                        <h3 class="giftcard-order-card__section-title">Timing</h3>
-                        <div class="giftcard-order-card__meta">
-                          <div>
-                            <span>{t('giftcards.created')}</span>
-                            <strong>{formatTimestamp(record().created_at)}</strong>
-                          </div>
-                          <div>
-                            <span>{t('giftcards.updated')}</span>
-                            <strong>{formatTimestamp(record().updated_at)}</strong>
-                          </div>
-                          <div>
-                            <span>{t('giftcards.completed')}</span>
-                            <strong>{formatTimestamp(record().completed_at)}</strong>
-                          </div>
-                          <div>
-                            <span>{t('giftcards.retryable')}</span>
-                            <strong>{record().retryable ? t('giftcards.yes') : t('giftcards.no')}</strong>
-                          </div>
-                        </div>
-
-                        <button
-                          class="giftcard-order-card__refresh"
-                          disabled={refreshing()}
-                          onClick={() => void refreshOrder()}
-                          type="button"
-                        >
-                          {refreshing() ? t('giftcards.refreshing') : t('giftcards.refresh')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  );
+                }}
               </Show>
             </Show>
           </Show>

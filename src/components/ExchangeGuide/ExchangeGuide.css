@@ -1,243 +1,197 @@
 .exchange-guide {
-  position: relative;
   max-width: 1240px;
   margin: 0 auto;
-  padding: 32px 32px 112px;
+  padding: 0 32px 104px;
 }
 
-.exchange-guide::before {
-  content: "";
-  position: absolute;
-  inset: 120px 32px 0;
-  border-radius: 40px;
-  border: 1px solid var(--assetar-border-soft);
-  background: var(--assetar-background);
-  z-index: 0;
-}
-
-.exchange-guide > * {
-  position: relative;
-  z-index: 1;
-}
-
-.exchange-guide__intro {
-  max-width: 760px;
-  margin-bottom: 40px;
-}
-
-.exchange-guide__kicker,
-.exchange-guide__steps-kicker,
-.exchange-guide__card-kicker {
-  margin: 0 0 12px;
-  color: #2563eb;
-  font-family: "Roboto Mono", monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.exchange-guide__title {
-  margin: 0;
-  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
-  font-weight: 800;
-  line-height: 0.96;
-  letter-spacing: -0.06em;
-}
-
-.exchange-guide__summary {
-  margin-top: 18px;
-  max-width: 640px;
-  font-size: 1.06rem;
-  color: var(--assetar-text-muted);
-}
-
-.exchange-guide__highlights {
+.exchange-guide__row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: 24px;
-  margin-bottom: 36px;
+  align-items: stretch;
 }
 
-.exchange-guide__card {
-  min-height: 100%;
-  padding: 28px;
-  border: 1px solid var(--assetar-border);
-  border-radius: 28px;
-  background: var(--assetar-background);
-  box-shadow: var(--assetar-shadow-soft);
+.exchange-guide__overview,
+.exchange-guide__journey {
+  min-width: 0;
 }
 
-.exchange-guide__card:nth-child(2) {
-  background: var(--assetar-background);
+.exchange-guide__overview-card {
+  height: 100%;
+  padding: 20px;
+  border: 1px solid rgba(147, 197, 253, 0.48);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(241, 245, 249, 0.95)),
+    #ffffff;
+  box-shadow:
+    0 16px 42px rgba(37, 99, 235, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
 }
 
-.exchange-guide__card-title {
-  margin: 0;
-  font-size: 1.7rem;
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: #0f172a;
-}
-
-.exchange-guide__card-copy {
-  margin-top: 16px;
-  color: var(--assetar-text-muted);
-  font-size: 1rem;
-}
-
-.exchange-guide__chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.exchange-guide__chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: var(--assetar-surface);
-  color: var(--assetar-blue);
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.exchange-guide__steps-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.exchange-guide__steps-title {
-  margin: 0;
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 1;
-}
-
-.exchange-guide__cta {
+.exchange-guide__overview-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 0 20px;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 10px;
   border-radius: 16px;
-  background: var(--assetar-blue);
-  color: #ffffff;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.exchange-guide__cta:hover {
-  color: #ffffff;
-  background: var(--assetar-blue-hover);
-}
-
-.exchange-guide__steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.exchange-guide__step {
-  position: relative;
-  padding: 26px 24px 28px;
-  border-radius: 26px;
-  border: 1px solid var(--assetar-border);
-  background: var(--assetar-background);
-  box-shadow: var(--assetar-shadow-soft);
-  color: var(--assetar-text);
-  overflow: hidden;
-}
-
-.exchange-guide__step::before {
-  display: none;
-}
-
-.exchange-guide__step-number {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(125, 211, 252, 0.16));
   color: var(--assetar-blue);
-  font-family: "Roboto Mono", monospace;
-  font-size: 0.88rem;
-  letter-spacing: 0.14em;
 }
 
-.exchange-guide__step-title {
-  position: relative;
+.exchange-guide__overview-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+}
+
+.exchange-guide__overview-block + .exchange-guide__overview-block {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.exchange-guide__overview-title {
   margin: 0;
-  font-size: 1.38rem;
+  color: #0f172a;
+  font-size: 1.125rem;
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.exchange-guide__overview-copy {
+  margin: 10px 0 0;
+  color: #334155;
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.68;
+  text-align: justify;
+}
+
+.exchange-guide__journey-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 18px 20px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(239, 246, 255, 0.82)),
+    #ffffff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+}
+
+.exchange-guide__journey-header {
+  text-align: center;
+  padding-top: 6px;
+}
+
+.exchange-guide__journey-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.5rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.exchange-guide__step-list {
+  margin-top: 10px;
+}
+
+.exchange-guide__step-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 2px;
+}
+
+.exchange-guide__step-index {
+  color: #0f172a;
+  font-family: "Raleway", sans-serif;
+  font-size: 2.375rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.exchange-guide__step-index span {
+  color: var(--assetar-blue);
+}
+
+.exchange-guide__step-body {
+  min-width: 0;
 }
 
 .exchange-guide__step-copy {
-  position: relative;
-  margin-top: 16px;
-  color: var(--assetar-text-muted);
-  font-size: 0.98rem;
+  margin: 0;
+  color: #475569;
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.55;
+  text-align: justify;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-@media (max-width: 960px) {
+.exchange-guide__step-copy strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.exchange-guide__step-divider {
+  width: 80%;
+  height: 1px;
+  margin: 2px auto;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0), rgba(37, 99, 235, 0.28), rgba(37, 99, 235, 0));
+}
+
+.exchange-guide__step-divider.hidden {
+  display: none;
+}
+
+@media (max-width: 1040px) {
   .exchange-guide {
-    padding: 16px 20px 88px;
+    padding: 20px 20px 88px;
   }
 
-  .exchange-guide::before {
-    inset: 100px 20px 0;
-  }
-
-  .exchange-guide__highlights,
-  .exchange-guide__steps {
+  .exchange-guide__row {
     grid-template-columns: 1fr;
-  }
-
-  .exchange-guide__steps-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 
 @media (max-width: 640px) {
   .exchange-guide {
-    padding: 12px 16px 72px;
+    padding: 16px 16px 72px;
   }
 
-  .exchange-guide::before {
-    inset: 96px 16px 0;
-    border-radius: 28px;
+  .exchange-guide__overview-card,
+  .exchange-guide__journey-card {
+    padding: 18px 16px;
+    border-radius: 20px;
   }
 
-  .exchange-guide__intro {
-    margin-bottom: 28px;
+  .exchange-guide__overview-title {
+    font-size: 1.02rem;
   }
 
-  .exchange-guide__card,
-  .exchange-guide__step {
-    padding: 22px 20px;
+  .exchange-guide__overview-copy,
+  .exchange-guide__step-copy {
+    font-size: 0.92rem;
   }
 
-  .exchange-guide__title {
-    line-height: 1;
+  .exchange-guide__step-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px 0;
   }
 
-  .exchange-guide__summary {
-    font-size: 0.98rem;
+  .exchange-guide__step-index {
+    font-size: 1.95rem;
   }
 
-  .exchange-guide__cta {
-    width: 100%;
-  }
-
-  .exchange-guide__steps-title {
-    line-height: 1.04;
+  .exchange-guide__step-divider {
+    width: calc(100% - 12px);
   }
 }

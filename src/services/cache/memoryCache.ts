@@ -98,4 +98,5 @@ export const estimateCache = new MemoryCache(CACHE_CONFIG.maxSize.estimate);
 export const currencyCache = new MemoryCache(CACHE_CONFIG.maxSize.currencies);
 export const providerCache = new MemoryCache(CACHE_CONFIG.maxSize.providers);
 export const pairCache = new MemoryCache(CACHE_CONFIG.maxSize.pairs);
+export const giftcardCache = new MemoryCache(CACHE_CONFIG.maxSize.giftcards);
 export const swapCache = new MemoryCache(CACHE_CONFIG.maxSize.swaps);

@@ -3,7 +3,7 @@ console.log('Testing imports...');
 
 try {
   console.log('✓ All imports should resolve correctly');
-  console.log('Run: npm run dev');
+  console.log('Run: pnpm dev');
 } catch (e) {
   console.error('✗ Import error:', e.message);
 }

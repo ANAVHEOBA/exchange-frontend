@@ -8,6 +8,7 @@ export interface GiftCardProduct {
   expiry_and_validity?: string | null;
   card_image_url?: string | null;
   country?: string | null;
+  currency_code?: string | null;
   min_amount?: number | null;
   max_amount?: number | null;
   denominations?: number[] | null;
@@ -28,6 +29,7 @@ export interface CreateGiftCardOrderRequest {
   network_from: string;
   amount: number;
   email: string;
+  currency_code?: string;
   webhook?: string;
   webhook_key?: string;
   card_markup?: string;
@@ -54,6 +56,7 @@ export interface GiftCardOrderResponse {
   provider?: string | null;
   provider_trade_id?: string | null;
   provider_password?: string | null;
+  recipient_email: string;
   status: string;
   ticker_from: string;
   network_from: string;

@@ -1,4 +1,4 @@
-import { For, createMemo } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import type { SupportedLocale } from "../../i18n/config";
 import { useLocale } from "../../i18n/locale";
 import "./FaqSection.css";
@@ -687,6 +687,10 @@ const faqItemsByLocale: Record<SupportedLocale, FaqItem[]> = {
 export default function FaqSection() {
   const { t, locale } = useLocale();
   const faqItems = createMemo(() => faqItemsByLocale[(locale() as SupportedLocale)] ?? faqItemsByLocale.en);
+  const [showAll, setShowAll] = createSignal(false);
+  const visibleFaqItems = createMemo(() => (
+    showAll() ? faqItems() : faqItems().slice(0, 5)
+  ));
 
   return (
     <section class="faq-section" id="faq">
@@ -694,39 +698,65 @@ export default function FaqSection() {
         <p class="faq-section__eyebrow">{t('faq.eyebrow')}</p>
         <h2 class="faq-section__title">{t('faq.title')}</h2>
         <p class="faq-section__summary">{t('faq.summary')}</p>
-
-        <div class="faq-section__support-card">
-          <p class="faq-section__support-kicker">{t('faq.supportKicker')}</p>
-          <p class="faq-section__support-copy">{t('faq.supportCopy')}</p>
-        </div>
       </div>
 
-      <div class="faq-section__list">
-        <For each={faqItems()}>
+      <ul class="faq-section__list">
+        <For each={visibleFaqItems()}>
           {(item, index) => (
-            <details class="faq-item" open={index() === 0}>
-              <summary class="faq-item__summary">
-                <span class="faq-item__question">{item.question}</span>
-                <span class="faq-item__icon" aria-hidden="true" />
-              </summary>
+            <li class="faq-item-shell">
+              <details class="faq-item" open={index() === 0}>
+                <summary class="faq-item__summary">
+                  <span class="faq-item__summary-copy">
+                    <span class="faq-item__icon-help" aria-hidden="true">
+                      <svg viewBox="0 0 512 512">
+                        <path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256s256-114.6 256-256S397.4 0 256 0zM256 464c-114.7 0-208-93.31-208-208S141.3 48 256 48s208 93.31 208 208S370.7 464 256 464zM256 336c-18 0-32 14-32 32s13.1 32 32 32c17.1 0 32-14 32-32S273.1 336 256 336zM289.1 128h-51.1C199 128 168 159 168 198c0 13 11 24 24 24s24-11 24-24C216 186 225.1 176 237.1 176h51.1C301.1 176 312 186 312 198c0 8-4 14.1-11 18.1L244 251C236 256 232 264 232 272V288c0 13 11 24 24 24S280 301 280 288V286l45.1-28c21-13 34-36 34-60C360 159 329 128 289.1 128z" />
+                      </svg>
+                    </span>
+                    <span class="faq-item__question">{item.question}</span>
+                  </span>
 
-              <div class="faq-item__body">
-                <For each={item.paragraphs}>
-                  {paragraph => <p class="faq-item__copy">{paragraph}</p>}
-                </For>
+                  <span class="faq-item__chevron" aria-hidden="true">
+                    <svg viewBox="0 0 512 512">
+                      <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z" />
+                    </svg>
+                  </span>
+                </summary>
 
-                {item.bullets ? (
-                  <ul class="faq-item__bullets">
-                    <For each={item.bullets}>
-                      {bullet => <li class="faq-item__bullet">{bullet}</li>}
-                    </For>
-                  </ul>
-                ) : null}
-              </div>
-            </details>
+                <div class="faq-item__body">
+                  <For each={item.paragraphs}>
+                    {paragraph => <p class="faq-item__copy">{paragraph}</p>}
+                  </For>
+
+                  <Show when={item.bullets}>
+                    <ul class="faq-item__bullets">
+                      <For each={item.bullets}>
+                        {bullet => <li class="faq-item__bullet">{bullet}</li>}
+                      </For>
+                    </ul>
+                  </Show>
+                </div>
+              </details>
+            </li>
           )}
         </For>
-      </div>
+      </ul>
+
+      <Show when={!showAll() && faqItems().length > 5}>
+        <div class="faq-section__more-row">
+          <button
+            class="faq-section__more"
+            type="button"
+            onClick={() => setShowAll(true)}
+          >
+            {t('faq.showAll')}
+            <span class="faq-section__more-icon" aria-hidden="true">
+              <svg viewBox="0 0 512 512">
+                <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </Show>
     </section>
   );
 }

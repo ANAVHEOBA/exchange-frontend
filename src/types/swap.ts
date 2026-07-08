@@ -92,7 +92,9 @@ export interface SwapStatusResponse {
   provider_swap_id?: string;   // Provider's swap ID
   status: SwapStatus;          // Current status
   from: string;                // Source currency
+  network_from: string;        // Source network
   to: string;                  // Destination currency
+  network_to: string;          // Destination network
   amount: number;              // Swap amount
   deposit_address: string;     // Deposit address
   deposit_extra_id?: string;   // Deposit memo/ExtraID
@@ -110,6 +112,8 @@ export interface SwapStatusResponse {
   created_at: string;          // ISO 8601 creation time
   updated_at: string;          // ISO 8601 last update time
   expires_at?: string;         // ISO 8601 expiration time
+  completed_at?: string;       // ISO 8601 completion time
+  error?: string;              // Provider/backend error detail
 }
 
 // History types

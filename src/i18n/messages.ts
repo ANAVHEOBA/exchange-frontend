@@ -5,6 +5,7 @@ const messages = {
     header: {
       swap: 'Swap',
       giftcards: 'Gift Cards',
+      bot: 'Bot',
       howItWorks: 'How it works',
       faq: 'FAQ',
       contact: 'Contact',
@@ -95,6 +96,7 @@ const messages = {
       supportKicker: 'Need help?',
       supportCopy:
         'If your question is not covered here, reach out to support with the transaction ID and the team can review the case directly.',
+      showAll: 'Show All Questions',
     },
     footer: {
       support: 'Support:',
@@ -298,33 +300,46 @@ const messages = {
     },
     giftcards: {
       pageTitle: 'Gift Cards',
+      sellPageTitle: 'Sell Gift Cards',
       eyebrow: 'Gift Cards',
-      title: 'Buy gift cards with crypto.',
-      introCopy:
-        'Choose a country, filter the catalog, pick a card, and create a crypto checkout that delivers the gift card to your email.',
+      title: 'Crypto Gift Cards',
+      sellTitle: 'Sell gift cards through WhatsApp review.',
+      introCopy: 'Use crypto to buy at your favorite stores!',
+      sellIntroCopy:
+        'Selling gift cards is handled manually. Start a WhatsApp chat, share the card details, and our team can review the balance, quote the payout, and continue the transaction with you directly.',
+      buyMode: 'Buy Giftcard',
+      sellMode: 'Sell Giftcard',
       limit: 'Daily limit of $5,000 per email',
-      countryLabel: 'Country',
-      categoryLabel: 'Category',
+      countryLabel: 'Choose your Country',
+      categoryLabel: 'Choose a Category',
       searchLabel: 'Search',
       searchPlaceholder: 'Search for a store, game, or brand',
+      searchProduct: 'Search for a product',
       selectedCountry: 'Showing cards available for',
+      showingCardsAvailableFor: 'Showing Cards Available for:',
       allCategories: 'All Gift Cards',
       loading: 'Loading gift card catalog...',
       failed: 'Failed to load gift cards for this country.',
       empty: 'No gift cards matched the current filters.',
+      productUnavailable: 'This gift card is not available for the selected country right now.',
       results: 'cards',
       retry: 'Retry',
       chooseCard: 'Choose a card',
       chooseCardCopy:
         'Select a product from the catalog to review its details and create a checkout.',
+      backToCards: 'Back',
+      chooseAmount: 'Choose an Amount',
       chooseCurrency: 'Choose payment asset',
+      paymentMethod: 'Choose your Method of Payment',
       payWith: 'Pay with',
       deliveryEmail: 'Delivery email',
+      deliveryEmailLabel: 'An email to receive the card details',
       cardValue: 'Card value',
       availableValues: 'Available values',
       allowedRange: 'Allowed range',
       createCheckout: 'Create gift card checkout',
       creatingCheckout: 'Creating checkout...',
+      buyCard: 'Buy your Card',
       invalidEmail: 'Enter a valid email for delivery.',
       invalidDenomination: 'Choose one of the available gift card values.',
       minValuePrefix: 'Minimum value is',
@@ -336,6 +351,32 @@ const messages = {
       howToUse: 'How to use',
       terms: 'Terms and conditions',
       validity: 'Validity',
+      agreeTerms: "By proceeding you declare you agree to the card's Terms of Use.",
+      sellHowItWorksKicker: 'Manual review flow',
+      sellHowItWorksTitle: 'Sell cards through agent-assisted review.',
+      sellHowItWorksCopy:
+        'This is not an instant swap checkout. Gift card selling is handled like a support ticket so the team can inspect the card, confirm balance, and quote the payout before anything is settled.',
+      sellStepOneTitle: 'Start the chat',
+      sellStepOneCopy:
+        'Open WhatsApp and message the support line with the card brand, country, and the value or balance you want reviewed.',
+      sellStepTwoTitle: 'Send proof and payout details',
+      sellStepTwoCopy:
+        'Share the required screenshots or card proof, then tell the agent which asset you want to receive and the wallet address for payout.',
+      sellStepThreeTitle: 'Receive review and next steps',
+      sellStepThreeCopy:
+        'The team verifies the card, sends back the quote, and continues the payout flow directly in the same chat if the card is accepted.',
+      sellContactKicker: 'WhatsApp handoff',
+      sellContactTitle: 'Chat the gift card desk directly.',
+      sellContactCopy:
+        'Use the WhatsApp number below to start the sell flow. The button opens a message template so the agent gets the key details immediately.',
+      sellChecklistTitle: 'Include these details in your first message:',
+      sellChecklistOne: 'Gift card brand and country',
+      sellChecklistTwo: 'Current balance or denomination',
+      sellChecklistThree: 'Clear screenshots or card proof',
+      sellChecklistFour: 'Preferred payout coin and receiving wallet address',
+      sellOpenWhatsapp: 'Open WhatsApp Chat',
+      sellNote:
+        'If WhatsApp is not available on this device, copy the number and start the chat manually from your phone.',
       statusPageTitle: 'Gift Card Order',
       statusEyebrow: 'Gift Card Checkout',
       statusTitle: 'Track payment and delivery from one page.',
@@ -348,8 +389,12 @@ const messages = {
       orderSummary: 'Order summary',
       paymentInstructions: 'Payment instructions',
       deliveryDetails: 'Delivery details',
+      additionalDetails: 'Additional provider details',
       orderReference: 'Order reference',
       providerTradeId: 'Provider trade id',
+      providerOrderId: 'Provider order id',
+      providerDeliveryStatus: 'Provider delivery status',
+      payoutHash: 'Payout hash',
       sendAmount: 'You’ll pay',
       payTo: 'Deposit address',
       depositMemo: 'Deposit memo / extra id',
@@ -357,18 +402,66 @@ const messages = {
       activationLink: 'Activation link',
       redeemCode: 'Redeem code',
       providerPassword: 'Provider password',
+      showQr: 'Show QR',
+      hideQr: 'Hide QR',
+      qrAddressTab: 'Address only',
+      qrPaymentTab: 'URI with amount',
+      qrAddressCaption: 'Address only',
+      qrPaymentCaption: 'Includes address and amount',
+      openWallet: 'Open wallet',
+      paymentWarning:
+        'Send one transaction with the exact amount on the selected network. Do not use a different asset, network, or memo.',
+      liveOrderStatus: 'Live order status',
+      liveOrderCopy:
+        'The backend keeps refreshing the provider delivery state while this page stays open.',
       lastError: 'Latest error',
       queueState: 'Queue state',
       retryable: 'Retryable',
       created: 'Created',
       updated: 'Updated',
       completed: 'Completed',
+      timing: 'Timing',
       yes: 'Yes',
       no: 'No',
       copy: 'Copy',
       copied: 'Copied',
       terminalNote:
         'If the order stalls after payment, keep this order reference and contact support.',
+    },
+    bot: {
+      pageTitle: 'WhatsApp Bot',
+      eyebrow: 'WhatsApp Bot',
+      title: 'Start swaps inside WhatsApp.',
+      introCopy:
+        'The bot is already wired to the backend swap flow. Open the chat, send `swap` or a full request, compare quotes, and confirm the route directly inside WhatsApp.',
+      testModeBanner: 'Backend connected in Meta test mode',
+      numberLabel: 'Bot number',
+      openCta: 'Open WhatsApp Bot',
+      note:
+        'If WhatsApp Web is not available on this device, copy the number and start the same chat manually from your phone.',
+      testModeCopy:
+        'The current sender is Meta’s test number. Only recipient numbers approved inside the Meta dashboard can use this bot until you switch to a real production sender.',
+      flowKicker: 'Guided flow',
+      flowTitle: 'A real swap flow, not just a contact button.',
+      flowCopy:
+        'The production backend already handles a guided conversation for quote discovery, selection, recipient details, confirmation, and later status lookups.',
+      stepOneTitle: 'Start the request',
+      stepOneCopy:
+        'Send `swap` for the guided flow or write the full pair in one line, like `swap 100 usdc on stellar to bitcoin`.',
+      stepTwoTitle: 'Pick a quote',
+      stepTwoCopy:
+        'The bot returns live options from the backend. Reply with the quote number you want, then send the destination wallet address when prompted.',
+      stepThreeTitle: 'Confirm and track',
+      stepThreeCopy:
+        'Reply `confirm` to create the swap. After that, you can check progress any time with the same WhatsApp thread.',
+      commandsKicker: 'Supported commands',
+      commandsTitle: 'Use the same commands the backend already understands.',
+      commandsIntro:
+        'These are the live command patterns currently implemented in the WhatsApp swap flow.',
+      commandOne: 'swap 100 usdc on stellar to bitcoin',
+      commandTwo: 'swap',
+      commandThree: 'status <swap_id>',
+      commandFour: 'cancel',
     },
     status: {
       pageTitle: 'Swap Status',
@@ -530,6 +623,7 @@ const messages = {
       supportKicker: 'Χρειάζεσαι βοήθεια;',
       supportCopy:
         'Αν η ερώτησή σου δεν καλύπτεται εδώ, επικοινώνησε με την υποστήριξη με το transaction ID ώστε η ομάδα να εξετάσει την υπόθεση άμεσα.',
+      showAll: 'Προβολή όλων των ερωτήσεων',
     },
     footer: {
       support: 'Υποστήριξη:',
@@ -776,6 +870,7 @@ const messages = {
     header: {
       swap: 'Cambio',
       giftcards: 'Tarjetas regalo',
+      bot: 'Bot',
       howItWorks: 'Cómo funciona',
       faq: 'FAQ',
       contact: 'Contacto',
@@ -866,6 +961,7 @@ const messages = {
       supportKicker: '¿Necesitas ayuda?',
       supportCopy:
         'Si tu pregunta no aparece aquí, contacta con soporte con el ID de la transacción para que el equipo revise el caso directamente.',
+      showAll: 'Mostrar todas las preguntas',
     },
     footer: {
       support: 'Soporte:',
@@ -1042,6 +1138,41 @@ const messages = {
       downloadingHistory: 'Preparando tu Historial de Operaciones...',
       historyEmptyRow: 'Aún no hay transacciones completadas.',
     },
+    bot: {
+      pageTitle: 'Bot de WhatsApp',
+      eyebrow: 'Bot de WhatsApp',
+      title: 'Inicia swaps dentro de WhatsApp.',
+      introCopy:
+        'El bot ya está conectado al flujo de swaps del backend. Abre el chat, envía `swap` o una solicitud completa, compara cotizaciones y confirma la ruta directamente dentro de WhatsApp.',
+      testModeBanner: 'Backend conectado en modo de prueba de Meta',
+      numberLabel: 'Número del bot',
+      openCta: 'Abrir bot de WhatsApp',
+      note:
+        'Si WhatsApp Web no está disponible en este dispositivo, copia el número y abre el mismo chat manualmente desde tu teléfono.',
+      testModeCopy:
+        'El remitente actual es el número de prueba de Meta. Solo los números aprobados como destinatarios dentro del panel de Meta pueden usar este bot hasta que cambies a un remitente real de producción.',
+      flowKicker: 'Flujo guiado',
+      flowTitle: 'Un flujo de swap real, no solo un botón de contacto.',
+      flowCopy:
+        'El backend de producción ya maneja una conversación guiada para descubrir cotizaciones, elegir una opción, recoger direcciones, confirmar el swap y consultar el estado más tarde.',
+      stepOneTitle: 'Empieza la solicitud',
+      stepOneCopy:
+        'Envía `swap` para el flujo guiado o escribe el par completo en una sola línea, por ejemplo `swap 100 usdc on stellar to bitcoin`.',
+      stepTwoTitle: 'Elige una cotización',
+      stepTwoCopy:
+        'El bot devuelve opciones en vivo desde el backend. Responde con el número de la cotización que quieres y luego envía la dirección de destino cuando te la pida.',
+      stepThreeTitle: 'Confirma y sigue',
+      stepThreeCopy:
+        'Responde `confirm` para crear el swap. Después podrás revisar el progreso en cualquier momento desde el mismo chat de WhatsApp.',
+      commandsKicker: 'Comandos soportados',
+      commandsTitle: 'Usa los mismos comandos que el backend ya entiende.',
+      commandsIntro:
+        'Estos son los patrones de comandos en vivo que ya están implementados en el flujo de swap por WhatsApp.',
+      commandOne: 'swap 100 usdc on stellar to bitcoin',
+      commandTwo: 'swap',
+      commandThree: 'status <swap_id>',
+      commandFour: 'cancel',
+    },
     status: {
       pageTitle: 'Estado del swap',
       eyebrow: 'Checkout',
@@ -1202,6 +1333,7 @@ const messages = {
       supportKicker: 'Besoin d’aide ?',
       supportCopy:
         'Si votre question n’est pas couverte ici, contactez le support avec l’ID de transaction afin que l’équipe examine le cas directement.',
+      showAll: 'Voir toutes les questions',
     },
     footer: {
       support: 'Support :',
@@ -1539,6 +1671,7 @@ const messages = {
       supportKicker: 'Brauchst du Hilfe?',
       supportCopy:
         'Wenn deine Frage hier nicht beantwortet wird, kontaktiere den Support mit der Transaktions-ID, damit das Team den Fall direkt prüfen kann.',
+      showAll: 'Alle Fragen anzeigen',
     },
     footer: {
       support: 'Support:',
@@ -1875,6 +2008,7 @@ const messages = {
       supportKicker: '需要帮助？',
       supportCopy:
         '如果你的问题没有在这里涵盖，请携带交易 ID 联系支持团队，他们可以直接查看你的案例。',
+      showAll: '显示所有问题',
     },
     footer: {
       support: '支持：',

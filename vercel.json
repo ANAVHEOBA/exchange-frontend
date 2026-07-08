@@ -1,5 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/giftcards",
+      "destination": "/giftcards/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api-proxy/:path*",

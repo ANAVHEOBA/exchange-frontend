@@ -1,5 +1,6 @@
 import { Title } from '@solidjs/meta';
 import { useParams } from '@solidjs/router';
+import QRCode from 'qrcode';
 import { Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from 'solid-js';
 import Header from '../../components/Header/Header';
 import SiteFooter from '../../components/SiteFooter/SiteFooter';
@@ -11,21 +12,7 @@ import { format } from '../../utils/format';
 import './status.css';
 
 type SwapPageData = Partial<CreateSwapResponse & SwapStatusResponse>;
-
-const mergeDefinedFields = (
-  base: SwapPageData,
-  next: SwapPageData,
-): SwapPageData => {
-  const merged: SwapPageData = { ...base };
-
-  Object.entries(next).forEach(([key, value]) => {
-    if (value !== undefined) {
-      merged[key as keyof SwapPageData] = value as never;
-    }
-  });
-
-  return merged;
-};
+type QrMode = 'address' | 'payment';
 
 const STATUS_LABELS: Record<SwapStatus, string> = {
   waiting: 'Waiting for Funds',
@@ -39,21 +26,81 @@ const STATUS_LABELS: Record<SwapStatus, string> = {
 };
 
 const STATUS_MESSAGES: Record<SwapStatus, string> = {
-  waiting: 'Send the exact deposit amount to the address below before the quote expires.',
-  confirming: 'Your deposit was detected and is waiting for enough network confirmations.',
-  exchanging: 'The provider is executing the conversion now.',
-  sending: 'The payout transaction is being sent to your destination address.',
-  completed: 'The swap has completed successfully.',
-  failed: 'The swap failed. Review the details and contact support if needed.',
-  refunded: 'The provider marked this swap as refunded.',
-  expired: 'This swap expired before a valid deposit was confirmed.',
+  waiting: 'No deposit confirmation yet. Send the exact amount below before the checkout expires.',
+  confirming: 'Deposit detected. The provider is waiting for the required network confirmations.',
+  exchanging: 'Deposit confirmed. The provider is converting your funds now.',
+  sending: 'The provider is sending the payout to your destination wallet.',
+  completed: 'The payout was completed successfully.',
+  failed: 'The trade failed. Keep both transaction IDs and contact support.',
+  refunded: 'The provider marked this trade as refunded.',
+  expired: 'The checkout expired before a valid deposit was confirmed.',
+};
+
+const PROVIDER_LOGOS: Record<string, string> = {
+  alfacash: '/partners/Alfacash_square.png',
+  bitcoinvn: '/partners/BitcoinVN_square.webp',
+  changee: '/partners/Changee_square.jpg',
+  changehero: '/partners/Changehero_square.png',
+  changenow: '/partners/Changenow_square.png',
+  coincraddle: '/partners/CoinCraddle_square.jpg',
+  easybit: '/partners/EasyBit_square.jpg',
+  etz: '/partners/ETZ_square.jpg',
+  exolix: '/partners/Exolix_square.jpg',
+  explace: '/partners/Explace_square.jpg',
+  exwell: '/partners/ExWell_square.webp',
+  fixedfloat: '/partners/FixedFloat_square.svg',
+  godex: '/partners/Godex_square.png',
+  goexme: '/partners/Goexme_square.webp',
+  letsexchange: '/partners/LetsExchange_square.png',
+  mtpelerin: '/partners/MtPelerin_square.png',
+  pegasusswap: '/partners/Pegasusswap_square.jpg',
+  quickex: '/partners/Quickex_square.webp',
+  simpleswap: '/partners/Simpleswap_square.png',
+  stealthex: '/partners/StealthEX_square.png',
+  swapgate: '/partners/Swapgate_square.png',
+  swaptrade: '/partners/Swaptrade_square.webp',
+  swapter: '/partners/Swapter_square.png',
+  swapuz: '/partners/Swapuz_square.png',
+  wizardswap: '/partners/WizardSwap_square.jpg',
+  xchange: '/partners/XChange_square.png',
+  xgram: '/partners/XGram_square.jpg',
+};
+
+const PROVIDER_SUPPORT: Record<string, string> = {
+  changehero: 'https://changehero.io/contact',
+  changenow: 'https://support.changenow.io/hc/en-us',
+  easybit: 'https://easybit.com/en/contact',
+  exolix: 'https://exolix.com/contact',
+  fixedfloat: 'https://ff.io/support',
+  letsexchange: 'https://letsexchange.io/contact',
+  simpleswap: 'https://simpleswap.io/contact-us',
+  stealthex: 'https://stealthex.io/contacts',
+};
+
+const normalizeProvider = (provider?: string): string =>
+  provider?.toLowerCase().replace(/[^a-z0-9]/g, '') ?? '';
+
+const providerLogo = (provider?: string): string | undefined =>
+  PROVIDER_LOGOS[normalizeProvider(provider)];
+
+const providerSupport = (provider?: string): string | undefined =>
+  PROVIDER_SUPPORT[normalizeProvider(provider)];
+
+const mergeDefinedFields = (base: SwapPageData, next: SwapPageData): SwapPageData => {
+  const merged: SwapPageData = { ...base };
+
+  Object.entries(next).forEach(([key, value]) => {
+    if (value !== undefined) {
+      merged[key as keyof SwapPageData] = value as never;
+    }
+  });
+
+  return merged;
 };
 
 const isCreateSwapResponse = (
   swap: CreateSwapResponse | SwapStatusResponse | null,
-): swap is CreateSwapResponse => {
-  return Boolean(swap && 'deposit_amount' in swap);
-};
+): swap is CreateSwapResponse => Boolean(swap && 'deposit_amount' in swap);
 
 const formatTimestamp = (value?: string): string => {
   if (!value) {
@@ -71,58 +118,30 @@ const formatTimestamp = (value?: string): string => {
   }).format(date);
 };
 
-const formatCountdown = (value: string | undefined, now: number, expiredLabel: string): string => {
+const formatCountdown = (value: string | undefined, now: number): string => {
   if (!value) {
-    return '—';
+    return 'Not supplied';
   }
 
   const expiresAt = new Date(value).getTime();
   if (!Number.isFinite(expiresAt)) {
-    return '—';
+    return 'Not supplied';
   }
 
-  const diffMs = expiresAt - now;
-  if (diffMs <= 0) {
-    return expiredLabel;
+  const diff = Math.max(0, expiresAt - now);
+  if (diff === 0) {
+    return 'Expired';
   }
 
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const seconds = Math.floor(diff / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
 
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
-
-  if (minutes > 0) {
-    return `${minutes}m ${seconds}s`;
-  }
-
-  return `${seconds}s`;
-};
-
-const formatStatus = (status?: SwapStatus, labels?: Partial<Record<SwapStatus, string>>): string => {
-  if (!status) {
-    return 'Checking status';
-  }
-
-  return labels?.[status] ?? STATUS_LABELS[status];
-};
-
-const formatStatusMessage = (status?: SwapStatus, messages?: Partial<Record<SwapStatus, string>>): string => {
-  if (!status) {
-    return 'Loading the latest transaction details.';
-  }
-
-  return messages?.[status] ?? STATUS_MESSAGES[status];
+  return hours > 0 ? `${hours}h ${minutes}m ${remainder}s` : `${minutes}m ${remainder}s`;
 };
 
 const getStatusTone = (status?: SwapStatus): 'neutral' | 'warning' | 'success' | 'danger' => {
-  if (!status) {
-    return 'neutral';
-  }
-
   if (status === 'completed') {
     return 'success';
   }
@@ -138,6 +157,57 @@ const getStatusTone = (status?: SwapStatus): 'neutral' | 'warning' | 'success' |
   return 'neutral';
 };
 
+const isTerminalStatus = (status?: SwapStatus): boolean =>
+  Boolean(status && ['completed', 'failed', 'refunded', 'expired'].includes(status));
+
+const nativePaymentUri = (
+  ticker: string | undefined,
+  network: string | undefined,
+  address: string | undefined,
+  amount: number | null,
+): string | null => {
+  if (!ticker || !address || amount === null) {
+    return null;
+  }
+
+  const normalizedTicker = ticker.toLowerCase();
+  const normalizedNetwork = network?.toLowerCase() ?? '';
+  const isNativeNetwork = !normalizedNetwork || normalizedNetwork === 'mainnet';
+
+  if (!isNativeNetwork) {
+    return null;
+  }
+
+  const encodedAmount = encodeURIComponent(String(amount));
+  const cleanAddress = address.replace(/^bitcoincash:/i, '');
+  const schemes: Record<string, string> = {
+    btc: 'bitcoin',
+    bch: 'bitcoincash',
+    dash: 'dash',
+    doge: 'dogecoin',
+    ltc: 'litecoin',
+    zec: 'zcash',
+  };
+
+  if (normalizedTicker === 'xmr') {
+    return `monero:${address}?tx_amount=${encodedAmount}`;
+  }
+
+  if (normalizedTicker === 'sol') {
+    return `solana:${address}?amount=${encodedAmount}`;
+  }
+
+  const scheme = schemes[normalizedTicker];
+  return scheme ? `${scheme}:${cleanAddress}?amount=${encodedAmount}` : null;
+};
+
+const fallbackCurrencyIcon = (ticker?: string): string | undefined => {
+  const normalized = ticker?.toLowerCase();
+  return normalized && ['btc', 'xmr', 'usd'].includes(normalized)
+    ? `/country/icons/${normalized}.svg`
+    : undefined;
+};
+
 export default function SwapStatusPage() {
   const { t } = useLocale();
   const params = useParams();
@@ -147,72 +217,55 @@ export default function SwapStatusPage() {
   const [now, setNow] = createSignal(Date.now());
   const [refreshing, setRefreshing] = createSignal(false);
   const [copiedField, setCopiedField] = createSignal<string | null>(null);
+  const [qrOpen, setQrOpen] = createSignal(false);
+  const [qrMode, setQrMode] = createSignal<QrMode>('address');
+  const [qrDataUrl, setQrDataUrl] = createSignal('');
+  const [qrLoading, setQrLoading] = createSignal(false);
+  const [qrError, setQrError] = createSignal<string | null>(null);
 
   let copiedFieldTimer: number | undefined;
+  let qrRequest = 0;
 
   const swapId = createMemo(() => params.id?.trim() ?? '');
-
   const activeSwap = createMemo(() => {
     const current = swap.activeSwap();
-    const id = swapId();
-
-    if (!current || current.swap_id !== id) {
-      return null;
-    }
-
-    return current;
+    return current?.swap_id === swapId() ? current : null;
   });
 
   createEffect(() => {
     const current = activeSwap();
-
-    if (!isCreateSwapResponse(current)) {
-      return;
+    if (isCreateSwapResponse(current)) {
+      setSeedSwap(existing => existing?.swap_id === current.swap_id ? existing : current);
     }
-
-    setSeedSwap(existing => {
-      if (existing?.swap_id === current.swap_id) {
-        return existing;
-      }
-
-      return current;
-    });
   });
 
   createEffect(on(swapId, id => {
-    setSeedSwap(existing => (existing?.swap_id === id ? existing : null));
+    setSeedSwap(existing => existing?.swap_id === id ? existing : null);
     swap.stopPolling();
     swap.clearError();
 
-    if (!id) {
-      return;
+    if (id) {
+      void swap.startPolling(id).catch(() => undefined);
     }
-
-    void swap.startPolling(id).catch(() => {
-      // Store state already captures the error for rendering.
-    });
   }));
 
   onMount(() => {
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    onCleanup(() => window.clearInterval(timer));
+  });
 
-    onCleanup(() => {
-      window.clearInterval(timer);
-      swap.stopPolling();
-    });
+  onCleanup(() => {
+    swap.stopPolling();
+    qrRequest += 1;
+    if (copiedFieldTimer !== undefined) {
+      window.clearTimeout(copiedFieldTimer);
+    }
   });
 
   const pageData = createMemo<SwapPageData | null>(() => {
     const initial = seedSwap();
     const current = activeSwap();
-
-    if (!initial && !current) {
-      return null;
-    }
-
-    return mergeDefinedFields(initial ?? {}, current ?? {});
+    return initial || current ? mergeDefinedFields(initial ?? {}, current ?? {}) : null;
   });
 
   const resolveCurrency = (ticker?: string, network?: string) => {
@@ -222,83 +275,81 @@ export default function SwapStatusPage() {
 
     const normalizedTicker = ticker.toLowerCase();
     const normalizedNetwork = network?.toLowerCase();
-
-    return (
-      currencies().find(currency => {
-        const tickerMatches = currency.ticker.toLowerCase() === normalizedTicker;
-        const networkMatches = normalizedNetwork
-          ? currency.network.toLowerCase() === normalizedNetwork
-          : true;
-
-        return tickerMatches && networkMatches;
-      }) ??
-      currencies().find(currency => currency.ticker.toLowerCase() === normalizedTicker) ??
-      null
-    );
+    return currencies().find(currency =>
+      currency.ticker.toLowerCase() === normalizedTicker &&
+      (!normalizedNetwork || currency.network.toLowerCase() === normalizedNetwork)
+    ) ?? currencies().find(currency => currency.ticker.toLowerCase() === normalizedTicker) ?? null;
   };
 
-  const sendCurrency = createMemo(() => {
-    const data = pageData();
-    return resolveCurrency(data?.from, data?.network_from);
-  });
-
-  const receiveCurrency = createMemo(() => {
-    const data = pageData();
-    return resolveCurrency(data?.to, data?.network_to);
-  });
-
-  const sendAmount = createMemo(() => {
-    const data = pageData();
-    return data?.deposit_amount ?? data?.amount ?? null;
-  });
-
-  const receiveAmount = createMemo(() => {
-    return pageData()?.actual_receive ?? pageData()?.estimated_receive ?? null;
-  });
-
+  const sendCurrency = createMemo(() => resolveCurrency(pageData()?.from, pageData()?.network_from));
+  const receiveCurrency = createMemo(() => resolveCurrency(pageData()?.to, pageData()?.network_to));
+  const sendAmount = createMemo(() => pageData()?.deposit_amount ?? pageData()?.amount ?? null);
+  const receiveAmount = createMemo(() => pageData()?.actual_receive ?? pageData()?.estimated_receive ?? null);
+  const sendIcon = createMemo(() => sendCurrency()?.image || fallbackCurrencyIcon(pageData()?.from));
+  const receiveIcon = createMemo(() => receiveCurrency()?.image || fallbackCurrencyIcon(pageData()?.to));
   const statusTone = createMemo(() => getStatusTone(pageData()?.status));
-  const statusLabels = createMemo<Record<SwapStatus, string>>(() => ({
-    waiting: t('status.waitingFunds'),
-    confirming: t('status.confirmingDeposit'),
-    exchanging: t('status.exchanging'),
-    sending: t('status.sendingPayout'),
-    completed: t('status.completed'),
-    failed: t('status.failed'),
-    refunded: t('status.refunded'),
-    expired: t('status.expired'),
-  }));
-  const statusMessages = createMemo<Record<SwapStatus, string>>(() => ({
-    waiting: t('status.waitingMessage'),
-    confirming: t('status.confirmingMessage'),
-    exchanging: t('status.exchangingMessage'),
-    sending: t('status.sendingMessage'),
-    completed: t('status.completedMessage'),
-    failed: t('status.failedMessage'),
-    refunded: t('status.refundedMessage'),
-    expired: t('status.expiredMessage'),
-  }));
+  const paymentUri = createMemo(() => nativePaymentUri(
+    pageData()?.from,
+    pageData()?.network_from,
+    pageData()?.deposit_address,
+    sendAmount(),
+  ));
+  const qrPayload = createMemo(() =>
+    qrMode() === 'payment' && paymentUri()
+      ? paymentUri()!
+      : pageData()?.deposit_address ?? ''
+  );
 
-  onCleanup(() => {
-    if (copiedFieldTimer !== undefined) {
-      window.clearTimeout(copiedFieldTimer);
+  createEffect(() => {
+    if (!paymentUri() && qrMode() === 'payment') {
+      setQrMode('address');
     }
+  });
+
+  createEffect(() => {
+    const open = qrOpen();
+    const payload = qrPayload();
+    const request = ++qrRequest;
+
+    if (!open || !payload) {
+      setQrDataUrl('');
+      setQrError(null);
+      return;
+    }
+
+    setQrLoading(true);
+    setQrError(null);
+    void QRCode.toDataURL(payload, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 420,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    }).then(url => {
+      if (request === qrRequest) {
+        setQrDataUrl(url);
+      }
+    }).catch(() => {
+      if (request === qrRequest) {
+        setQrError('QR generation failed. Copy the address instead.');
+      }
+    }).finally(() => {
+      if (request === qrRequest) {
+        setQrLoading(false);
+      }
+    });
   });
 
   const writeToClipboard = async (value: string): Promise<boolean> => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(value);
       return true;
-    }
-
-    if (typeof document === 'undefined') {
-      return false;
     }
 
     const textarea = document.createElement('textarea');
     textarea.value = value;
     textarea.setAttribute('readonly', '');
-    textarea.style.position = 'absolute';
-    textarea.style.left = '-9999px';
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
     document.body.appendChild(textarea);
     textarea.select();
 
@@ -315,40 +366,29 @@ export default function SwapStatusPage() {
     }
 
     try {
-      const copied = await writeToClipboard(value);
-
-      if (!copied) {
+      if (!await writeToClipboard(value)) {
         return;
       }
 
       setCopiedField(field);
-
       if (copiedFieldTimer !== undefined) {
         window.clearTimeout(copiedFieldTimer);
       }
-
-      copiedFieldTimer = window.setTimeout(() => {
-        setCopiedField(current => (current === field ? null : current));
-      }, 1800);
+      copiedFieldTimer = window.setTimeout(() => setCopiedField(null), 1800);
     } catch {
-      // Ignore clipboard failures. The field remains visible for manual copying.
+      // The visible value remains available for manual copying.
     }
   };
 
   const refreshStatus = async () => {
-    const id = swapId();
-
-    if (!id) {
+    if (!swapId()) {
       return;
     }
 
     setRefreshing(true);
-
     try {
       swap.stopPolling();
-      await swap.startPolling(id);
-    } catch {
-      // Store state already captures the error for rendering.
+      await swap.startPolling(swapId());
     } finally {
       setRefreshing(false);
     }
@@ -361,9 +401,22 @@ export default function SwapStatusPage() {
 
       <section class="swap-status-page__shell">
         <div class="swap-status-page__intro">
-          <div class="swap-status-page__eyebrow">{t('status.eyebrow')}</div>
-          <h1 class="swap-status-page__title">{t('status.title')}</h1>
-          <p class="swap-status-page__copy">{t('status.introCopy')}</p>
+          <div>
+            <div class="swap-status-page__eyebrow">{t('status.eyebrow')}</div>
+            <h1 class="swap-status-page__title">Deposit once. Track every step.</h1>
+            <p class="swap-status-page__copy">Keep this page open until the payout is complete.</p>
+          </div>
+          <Show when={swapId()}>
+            <button
+              class="swap-status-page__id"
+              type="button"
+              onClick={() => void copyFieldValue('header-id', swapId())}
+            >
+              <span>Assetar ID</span>
+              <code>{swapId()}</code>
+              <strong>{copiedField() === 'header-id' ? 'Copied' : 'Copy'}</strong>
+            </button>
+          </Show>
         </div>
 
         <Show when={pageData()} fallback={
@@ -373,14 +426,7 @@ export default function SwapStatusPage() {
               {swap.error() ?? (swapId() ? t('status.loadingDetails') : t('status.noSwapId'))}
             </p>
             <Show when={swapId()}>
-              <button
-                class="swap-status-card__refresh"
-                disabled={refreshing()}
-                onClick={() => {
-                  void refreshStatus();
-                }}
-                type="button"
-              >
+              <button class="swap-status-card__refresh" disabled={refreshing()} onClick={() => void refreshStatus()} type="button">
                 {refreshing() ? t('status.refreshing') : t('status.retryStatus')}
               </button>
             </Show>
@@ -388,202 +434,203 @@ export default function SwapStatusPage() {
         }>
           {detail => (
             <div class="swap-status-page__layout">
-              <section class="swap-status-card swap-status-card--primary">
-                <div class="swap-status-card__provider-block">
-                  <div>
-                    <div class="swap-status-card__eyebrow">{t('status.chosenProvider')}</div>
-                    <div class="swap-status-card__provider">{detail().provider ?? t('status.pendingProvider')}</div>
+              <div class="swap-status-page__main-column">
+                <section class="swap-status-card swap-status-card--provider">
+                  <div class="swap-status-card__provider-identity">
+                    <Show
+                      when={providerLogo(detail().provider)}
+                      fallback={<div class="swap-status-card__provider-fallback">{detail().provider?.slice(0, 2).toUpperCase() ?? 'EX'}</div>}
+                    >
+                      <img src={providerLogo(detail().provider)} alt="" />
+                    </Show>
+                    <div>
+                      <div class="swap-status-card__eyebrow">{t('status.chosenProvider')}</div>
+                      <div class="swap-status-card__provider">{detail().provider ?? t('status.pendingProvider')}</div>
+                    </div>
                   </div>
-                  <div
-                    class={`swap-status-card__status swap-status-card__status--${statusTone()}`}
-                  >
-                    {formatStatus(detail().status, statusLabels())}
+                  <div class={`swap-status-card__status swap-status-card__status--${statusTone()}`}>
+                    {detail().status ? STATUS_LABELS[detail().status] : t('status.checkingStatus')}
                   </div>
-                </div>
+                </section>
 
-                <p class="swap-status-card__message">{formatStatusMessage(detail().status, statusMessages())}</p>
+                <section class="swap-status-card swap-status-card--checkout">
+                  <div class="swap-status-card__route">
+                    <div class="swap-status-card__asset-row">
+                      <div class="swap-status-card__asset-copy">
+                        <span>{t('status.sendAmount')}</span>
+                        <strong>{sendAmount() === null ? '—' : format.number(sendAmount()!, 8)}</strong>
+                      </div>
+                      <div class="swap-status-card__asset">
+                        <Show when={sendIcon()}><img src={sendIcon()} alt="" /></Show>
+                        <div>
+                          <strong>{detail().from_name ?? sendCurrency()?.name ?? detail().from ?? 'Unknown asset'}</strong>
+                          <span>{detail().from?.toUpperCase()} · {detail().network_from ?? sendCurrency()?.network ?? 'Network unavailable'}</span>
+                        </div>
+                      </div>
+                    </div>
 
-                <div class="swap-status-card__amount-grid">
-                  <div class="swap-status-card__amount-box">
-                    <span class="swap-status-card__amount-label">{t('status.sendAmount')}</span>
-                    <strong>
-                      {sendAmount() !== null
-                        ? format.currency(sendAmount()!, detail().from ?? '')
-                        : '—'}
-                    </strong>
-                    <span>{detail().from_name ?? sendCurrency()?.name ?? detail().from ?? t('status.unknownAsset')}</span>
-                    <Show when={detail().network_from ?? sendCurrency()?.network}>
-                      <span>{detail().network_from ?? sendCurrency()?.network}</span>
+                    <div class="swap-status-card__route-divider"><span>to</span></div>
+
+                    <div class="swap-status-card__asset-row">
+                      <div class="swap-status-card__asset-copy">
+                        <span>{detail().actual_receive ? t('status.receivedAmount') : 'Expected receive'}</span>
+                        <strong>{receiveAmount() === null ? '—' : format.number(receiveAmount()!, 8)}</strong>
+                      </div>
+                      <div class="swap-status-card__asset">
+                        <Show when={receiveIcon()}><img src={receiveIcon()} alt="" /></Show>
+                        <div>
+                          <strong>{detail().to_name ?? receiveCurrency()?.name ?? detail().to ?? 'Unknown asset'}</strong>
+                          <span>{detail().to?.toUpperCase()} · {detail().network_to ?? receiveCurrency()?.network ?? 'Network unavailable'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="swap-status-card__deposit">
+                    <div class="swap-status-card__deposit-heading">
+                      <span>Transfer exactly</span>
+                      <strong>{sendAmount() === null ? '—' : format.currency(sendAmount()!, detail().from ?? '')}</strong>
+                      <span>on {detail().network_from ?? sendCurrency()?.network ?? 'the selected network'}</span>
+                    </div>
+                    <p>Send one transaction to this deposit address. Do not send a different asset or network.</p>
+
+                    <div class="swap-status-card__address-block">
+                      <div class="swap-status-card__field-head">
+                        <span class="swap-status-card__field-label">{t('status.depositAddress')}</span>
+                        <div class="swap-status-card__field-actions">
+                          <button type="button" onClick={() => void copyFieldValue('deposit-address', detail().deposit_address)}>
+                            {copiedField() === 'deposit-address' ? 'Copied' : 'Copy'}
+                          </button>
+                          <button type="button" onClick={() => setQrOpen(value => !value)}>
+                            {qrOpen() ? 'Hide QR' : 'Show QR'}
+                          </button>
+                        </div>
+                      </div>
+                      <code>{detail().deposit_address ?? t('status.unavailable')}</code>
+                    </div>
+
+                    <Show when={detail().deposit_extra_id}>
+                      <div class="swap-status-card__memo-block">
+                        <div>
+                          <span>{t('status.depositMemo')}</span>
+                          <strong>Required with your transfer</strong>
+                        </div>
+                        <code>{detail().deposit_extra_id}</code>
+                        <button type="button" onClick={() => void copyFieldValue('deposit-memo', detail().deposit_extra_id)}>
+                          {copiedField() === 'deposit-memo' ? 'Copied' : 'Copy memo'}
+                        </button>
+                      </div>
+                    </Show>
+
+                    <Show when={qrOpen()}>
+                      <div class="swap-status-card__qr-panel">
+                        <div class="swap-status-card__qr-tabs" role="tablist" aria-label="QR content">
+                          <button classList={{ active: qrMode() === 'address' }} type="button" onClick={() => setQrMode('address')}>Address only</button>
+                          <Show when={paymentUri()}>
+                            <button classList={{ active: qrMode() === 'payment' }} type="button" onClick={() => setQrMode('payment')}>URI with amount</button>
+                          </Show>
+                        </div>
+                        <div class="swap-status-card__qr-canvas" aria-live="polite">
+                          <Show when={qrLoading()}><div class="swap-status-card__qr-loading">Generating secure QR…</div></Show>
+                          <Show when={!qrLoading() && qrDataUrl()}>
+                            <img src={qrDataUrl()} alt={qrMode() === 'payment' ? 'Payment QR code with deposit amount' : 'Deposit address QR code'} />
+                          </Show>
+                          <Show when={qrError()}><div class="swap-status-card__error">{qrError()}</div></Show>
+                        </div>
+                        <div class="swap-status-card__qr-caption">
+                          <span>{qrMode() === 'payment' ? 'Includes address and amount' : 'Address only'}</span>
+                          <Show when={qrMode() === 'payment' && paymentUri()}>
+                            <a href={paymentUri()!}>Open wallet</a>
+                          </Show>
+                        </div>
+                      </div>
                     </Show>
                   </div>
 
-                  <div class="swap-status-card__amount-box">
-                    <span class="swap-status-card__amount-label">
-                      {detail().actual_receive ? t('status.receivedAmount') : t('status.receiveAmount')}
-                    </span>
-                    <strong>
-                      {receiveAmount() !== null
-                        ? format.currency(receiveAmount()!, detail().to ?? '')
-                        : '—'}
-                    </strong>
-                    <span>{detail().to_name ?? receiveCurrency()?.name ?? detail().to ?? t('status.unknownAsset')}</span>
-                    <Show when={detail().network_to ?? receiveCurrency()?.network}>
-                      <span>{detail().network_to ?? receiveCurrency()?.network}</span>
-                    </Show>
-                  </div>
-                </div>
+                  <div class="swap-status-card__warning">{t('status.warning')}</div>
 
-                <div class="swap-status-card__field-stack">
-                  <div class="swap-status-card__field">
-                    <div class="swap-status-card__field-head">
-                      <span class="swap-status-card__field-label">{t('status.depositAddress')}</span>
-                      <button
-                        class="swap-status-card__copy"
-                        disabled={!detail().deposit_address}
-                        onClick={() => {
-                          void copyFieldValue('deposit-address', detail().deposit_address);
-                        }}
-                        type="button"
-                      >
-                        {copiedField() === 'deposit-address' ? t('status.copied') : t('status.copy')}
-                      </button>
+                  <div class="swap-status-card__recipient">
+                    <div>
+                      <span>{t('status.recipientAddress')}</span>
+                      <strong>{detail().to?.toUpperCase()} on {detail().network_to ?? receiveCurrency()?.network ?? 'selected network'}</strong>
                     </div>
-                    <code>{detail().deposit_address ?? t('status.unavailable')}</code>
+                    <button type="button" onClick={() => void copyFieldValue('recipient-address', detail().recipient_address)}>
+                      <code>{detail().recipient_address ?? t('status.unavailable')}</code>
+                      <span>{copiedField() === 'recipient-address' ? 'Copied' : 'Copy'}</span>
+                    </button>
                   </div>
 
-                  <Show when={detail().deposit_extra_id}>
-                    <div class="swap-status-card__field">
-                      <span class="swap-status-card__field-label">{t('status.depositMemo')}</span>
-                      <code>{detail().deposit_extra_id}</code>
+                  <div class="swap-status-card__live-status" aria-live="polite">
+                    <Show when={!isTerminalStatus(detail().status)}><div class="swap-status-card__spinner" /></Show>
+                    <div>
+                      <span>Live transaction status</span>
+                      <strong>{detail().status ? STATUS_LABELS[detail().status] : t('status.checkingStatus')}</strong>
+                      <p>{detail().status ? STATUS_MESSAGES[detail().status] : t('status.loadingLatest')}</p>
                     </div>
-                  </Show>
-
-                  <div class="swap-status-card__field">
-                    <div class="swap-status-card__field-head">
-                      <span class="swap-status-card__field-label">{t('status.recipientAddress')}</span>
-                      <button
-                        class="swap-status-card__copy"
-                        disabled={!detail().recipient_address}
-                        onClick={() => {
-                          void copyFieldValue('recipient-address', detail().recipient_address);
-                        }}
-                        type="button"
-                      >
-                        {copiedField() === 'recipient-address' ? t('status.copied') : t('status.copy')}
-                      </button>
-                    </div>
-                    <code>{detail().recipient_address ?? t('status.unavailable')}</code>
                   </div>
 
-                  <Show when={detail().recipient_extra_id}>
-                    <div class="swap-status-card__field">
-                      <span class="swap-status-card__field-label">{t('status.recipientMemo')}</span>
-                      <code>{detail().recipient_extra_id}</code>
+                  <Show when={detail().error}>
+                    <div class="swap-status-card__error">{detail().error}</div>
+                  </Show>
+
+                  <div class="swap-status-card__actions">
+                    <button class="swap-status-card__refresh" disabled={refreshing()} onClick={() => void refreshStatus()} type="button">
+                      {refreshing() ? t('status.refreshing') : t('status.refreshTransaction')}
+                    </button>
+                    <Show when={swap.polling()}><span class="swap-status-card__polling">Automatic updates are on</span></Show>
+                  </div>
+                </section>
+              </div>
+
+              <aside class="swap-status-page__sidebar">
+                <section class="swap-status-card swap-status-card--timing">
+                  <div class="swap-status-card__section-head">
+                    <div>
+                      <span class="swap-status-card__eyebrow">Deposit window</span>
+                      <div class="swap-status-card__section-title">Checkout expiration</div>
                     </div>
-                  </Show>
-                </div>
-
-                <div class="swap-status-card__warning">
-                  {t('status.warning')}
-                </div>
-
-                <div class="swap-status-card__actions">
-                  <button
-                    class="swap-status-card__refresh"
-                    disabled={refreshing()}
-                  onClick={() => {
-                      void refreshStatus();
-                    }}
-                    type="button"
-                  >
-                    {refreshing() ? t('status.refreshing') : t('status.refreshTransaction')}
-                  </button>
-
-                  <Show when={swap.polling()}>
-                    <span class="swap-status-card__polling">{t('status.livePolling')}</span>
-                  </Show>
-                </div>
-              </section>
-
-              <div class="swap-status-page__sidebar">
-                <section class="swap-status-card">
-                  <div class="swap-status-card__section-title">{t('status.timing')}</div>
+                    <strong class="swap-status-card__countdown">{formatCountdown(detail().expires_at, now())}</strong>
+                  </div>
                   <div class="swap-status-card__table">
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.created')}</span>
-                      <strong>{formatTimestamp(detail().created_at)}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.currentTime')}</span>
-                      <strong>{formatTimestamp(new Date(now()).toISOString())}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.lastUpdate')}</span>
-                      <strong>{formatTimestamp(detail().updated_at ?? detail().created_at)}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.expires')}</span>
-                      <strong>{formatTimestamp(detail().expires_at)}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.timeRemaining')}</span>
-                      <strong>{formatCountdown(detail().expires_at, now(), t('status.expired'))}</strong>
-                    </div>
+                    <div class="swap-status-card__table-row"><span>{t('status.created')}</span><strong>{formatTimestamp(detail().created_at)}</strong></div>
+                    <div class="swap-status-card__table-row"><span>{t('status.currentTime')}</span><strong>{formatTimestamp(new Date(now()).toISOString())}</strong></div>
+                    <div class="swap-status-card__table-row"><span>{t('status.expires')}</span><strong>{formatTimestamp(detail().expires_at)}</strong></div>
+                  </div>
+                  <p class="swap-status-card__timing-note">Send promptly and use an appropriate network fee so the provider sees the deposit before expiry.</p>
+                </section>
+
+                <section class="swap-status-card">
+                  <div class="swap-status-card__section-title">Contact support</div>
+                  <p class="swap-status-card__message">Keep the Assetar ID and provider ID when asking for help.</p>
+                  <div class="swap-status-card__support-list">
+                    <Show when={providerSupport(detail().provider)}>
+                      <a href={providerSupport(detail().provider)} target="_blank" rel="noreferrer"><span>{detail().provider} support</span><strong>Open website</strong></a>
+                    </Show>
+                    <a href="https://t.me/AssetarSupportBot" target="_blank" rel="noreferrer"><span>Assetar support</span><strong>@AssetarSupportBot</strong></a>
+                    <a href="mailto:support@assetar.app"><span>Email</span><strong>support@assetar.app</strong></a>
                   </div>
                 </section>
 
                 <section class="swap-status-card">
                   <div class="swap-status-card__section-title">{t('status.details')}</div>
                   <div class="swap-status-card__table">
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.assetarId')}</span>
-                      <strong>{detail().swap_id ?? '—'}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.exchange')}</span>
-                      <strong>{detail().provider ?? '—'}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.rateType')}</span>
-                      <strong>{detail().rate_type ?? '—'}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.status')}</span>
-                      <strong>{formatStatus(detail().status, statusLabels())}</strong>
-                    </div>
-                    <div class="swap-status-card__table-row">
-                      <span>{t('status.rate')}</span>
-                      <strong>{detail().rate ? format.number(detail().rate, 6) : '—'}</strong>
-                    </div>
+                    <button class="swap-status-card__table-row swap-status-card__table-row--button" type="button" onClick={() => void copyFieldValue('assetar-id', detail().swap_id)}>
+                      <span>{t('status.assetarId')}</span><strong>{copiedField() === 'assetar-id' ? 'Copied' : detail().swap_id ?? '—'}</strong>
+                    </button>
+                    <div class="swap-status-card__table-row"><span>{t('status.exchange')}</span><strong>{detail().provider ?? '—'}</strong></div>
+                    <div class="swap-status-card__table-row"><span>{t('status.rateType')}</span><strong>{detail().rate_type ?? '—'}</strong></div>
+                    <div class="swap-status-card__table-row"><span>{t('status.status')}</span><strong>{detail().status ? STATUS_LABELS[detail().status] : '—'}</strong></div>
                     <Show when={detail().provider_swap_id}>
-                      <div class="swap-status-card__table-row">
-                        <span>{t('status.providerId')}</span>
-                        <strong>{detail().provider_swap_id}</strong>
-                      </div>
+                      <button class="swap-status-card__table-row swap-status-card__table-row--button" type="button" onClick={() => void copyFieldValue('provider-id', detail().provider_swap_id)}>
+                        <span>{t('status.providerId')}</span><strong>{copiedField() === 'provider-id' ? 'Copied' : detail().provider_swap_id}</strong>
+                      </button>
                     </Show>
-                    <Show when={detail().tx_hash_in}>
-                      <div class="swap-status-card__table-row swap-status-card__table-row--full">
-                        <span>{t('status.depositTx')}</span>
-                        <code>{detail().tx_hash_in}</code>
-                      </div>
-                    </Show>
-                    <Show when={detail().tx_hash_out}>
-                      <div class="swap-status-card__table-row swap-status-card__table-row--full">
-                        <span>{t('status.payoutTx')}</span>
-                        <code>{detail().tx_hash_out}</code>
-                      </div>
-                    </Show>
+                    <Show when={detail().tx_hash_in}><div class="swap-status-card__table-row swap-status-card__table-row--full"><span>{t('status.depositTx')}</span><code>{detail().tx_hash_in}</code></div></Show>
+                    <Show when={detail().tx_hash_out}><div class="swap-status-card__table-row swap-status-card__table-row--full"><span>{t('status.payoutTx')}</span><code>{detail().tx_hash_out}</code></div></Show>
                   </div>
+                  <p class="swap-status-card__counterparty">The selected provider is the counterparty for this trade. Assetar routes and monitors the transaction but does not custody your funds.</p>
                 </section>
-
-                <section class="swap-status-card">
-                  <div class="swap-status-card__section-title">{t('status.needHelp')}</div>
-                  <p class="swap-status-card__message">{t('status.helpCopy')}</p>
-                  <Show when={swap.error()}>
-                    <div class="swap-status-card__error">{swap.error()}</div>
-                  </Show>
-                </section>
-              </div>
+              </aside>
             </div>
           )}
         </Show>

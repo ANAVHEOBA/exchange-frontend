@@ -11,6 +11,7 @@ export const CACHE_CONFIG = {
     currencies: Number(import.meta.env.VITE_CURRENCY_CACHE_TTL) || 300,
     providers: 300, // 5 minutes (providers rarely change)
     pairs: 300, // 5 minutes (pairs rarely change)
+    giftcards: 300, // 5 minutes (catalog changes infrequently)
     balance: Number(import.meta.env.VITE_BALANCE_CACHE_TTL) || 15,
     chains: 3600, // 1 hour (rarely changes)
     swapStatus: 5, // 5 seconds (active swaps)
@@ -22,6 +23,7 @@ export const CACHE_CONFIG = {
     currency: 'currency:',
     provider: 'provider:',
     pair: 'pair:',
+    giftcard: 'giftcard:',
     balance: 'balance:',
     chain: 'chain:',
     swap: 'swap:',
@@ -34,6 +36,7 @@ export const CACHE_CONFIG = {
     currencies: 1,
     providers: 1,
     pairs: 100, // Cache multiple pages
+    giftcards: 64,
     balances: 100,
     chains: 1,
     swaps: 50,
