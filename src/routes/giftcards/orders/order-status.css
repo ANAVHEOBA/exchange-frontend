@@ -162,6 +162,18 @@
   line-height: 1.5;
 }
 
+.giftcard-checkout__status-spinner {
+  width: 28px;
+  height: 28px;
+  margin-top: 18px;
+  margin-right: auto;
+  margin-left: auto;
+  border: 3px solid rgba(37, 99, 235, 0.18);
+  border-top-color: #2563eb;
+  border-radius: 999px;
+  animation: giftcard-checkout-spin 0.8s linear infinite;
+}
+
 .giftcard-checkout__pending-spinner {
   width: 22px;
   height: 22px;
@@ -286,7 +298,7 @@
 }
 
 .giftcard-checkout__status-copy {
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
 .giftcard-checkout__status-copy strong {

@@ -483,6 +483,10 @@ export default function GiftCardOrderStatusPage() {
                             </div>
                           </Show>
 
+                          <Show when={!shouldStopGiftcardOrderPolling(record())}>
+                            <div class="giftcard-checkout__status-spinner" aria-hidden="true" />
+                          </Show>
+
                           <p class="giftcard-checkout__status-copy">
                             <strong>Status:</strong> {currentStatus()}
                           </p>
