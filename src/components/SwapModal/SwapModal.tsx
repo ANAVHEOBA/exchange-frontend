@@ -145,6 +145,32 @@ const isNoRouteError = (error: unknown): boolean => {
   );
 };
 
+/**
+ * The backend returns this for an amount below/above the pair's real min/max
+ * deposit bounds (status 400), with an already human-readable message - unlike
+ * a generic upstream failure, it should be shown as-is rather than papered over
+ * with a "try again" placeholder.
+ */
+const isAmountOutOfRangeError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const status = 'status' in error ? Number((error as { status?: number }).status) : null;
+  return status === 400;
+};
+
+const describeApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String((error as { message?: string }).message ?? '').trim();
+    if (message) {
+      return message;
+    }
+  }
+
+  return fallback;
+};
+
 const matchesCurrency = (
   currency: Currency,
   ticker?: string,
@@ -621,6 +647,10 @@ function SwapModal(props: SwapModalProps) {
             return t('swap.previewNoLive');
           }
 
+          if (isAmountOutOfRangeError(quoteDiscovery.error())) {
+            return describeApiErrorMessage(quoteDiscovery.error(), t('swap.estimateDelayed'));
+          }
+
           return t('swap.estimateDelayed');
         }
 
@@ -630,6 +660,10 @@ function SwapModal(props: SwapModalProps) {
       if (quoteDiscovery.error()) {
         if (isNoRouteError(quoteDiscovery.error())) {
           return t('swap.noRouteForPair');
+        }
+
+        if (isAmountOutOfRangeError(quoteDiscovery.error())) {
+          return describeApiErrorMessage(quoteDiscovery.error(), t('swap.liveLookupFailed'));
         }
 
         return t('swap.liveLookupFailed');

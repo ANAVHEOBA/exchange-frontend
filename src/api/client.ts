@@ -316,6 +316,8 @@ export class ApiClient {
         const errorData = await response.json();
         error.message = errorData.message || errorData.error || error.message;
         error.code = errorData.code;
+        error.minAmount = errorData.min_amount;
+        error.maxAmount = errorData.max_amount;
       } catch {
         // Response is not JSON, use default error
       }

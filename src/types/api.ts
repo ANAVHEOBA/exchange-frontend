@@ -12,6 +12,8 @@ export interface ApiError {
   message: string;
   code?: string;
   status?: number;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 export interface PaginatedResponse<T> {
