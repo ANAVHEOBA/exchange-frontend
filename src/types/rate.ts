@@ -66,3 +66,15 @@ export interface RatesQuery {
   provider?: string;                // Filter by specific provider
   min_kycrating?: string;           // Minimum KYC/privacy rating filter
 }
+
+export interface PairLimitsQuery {
+  from: string;                     // Source currency ticker
+  network_from: string;             // Source currency network
+  to: string;                       // Destination currency ticker
+  network_to: string;               // Destination currency network
+}
+
+export interface PairLimitsResponse {
+  min_deposit: number | null;       // Minimum deposit for the pair, if known
+  max_deposit: number | null;       // Maximum deposit for the pair, if known
+}

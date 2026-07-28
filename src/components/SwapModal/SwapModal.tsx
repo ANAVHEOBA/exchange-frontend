@@ -1,7 +1,7 @@
 import { Show, createEffect, createMemo, createSignal, on } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { CurrencySelector } from '../../features/currencies';
-import { QuoteDiscoveryPanel, useQuoteDiscovery } from '../../features/quotes';
+import { QuoteDiscoveryPanel, usePairLimits, useQuoteDiscovery } from '../../features/quotes';
 import {
   RecipientAddressForm,
   describeRecipientExtraId,
@@ -349,6 +349,31 @@ function SwapModal(props: SwapModalProps) {
   });
 
   const quoteDiscovery = useQuoteDiscovery({ query: quoteQuery });
+
+  const pairLimitsQuery = createMemo(() => {
+    const from = fromCurrency();
+    const to = toCurrency();
+
+    if (!from || !to || isSameCurrency(from, to)) {
+      return null;
+    }
+
+    return {
+      from: from.ticker,
+      network_from: from.network,
+      to: to.ticker,
+      network_to: to.network,
+    };
+  });
+
+  const pairLimits = usePairLimits({ query: pairLimitsQuery });
+
+  // Prefer the amount-independent probe (available the moment a pair is picked,
+  // matching Trocador's own site) and fall back to whatever the live quote
+  // attempt reported for the actual requested amount.
+  const displayMinDeposit = createMemo(() => {
+    return pairLimits.minDeposit() ?? quoteDiscovery.minDeposit();
+  });
   const addressValidation = useAddressValidation({
     address: recipientAddress,
     currency: toCurrency,
@@ -627,6 +652,27 @@ function SwapModal(props: SwapModalProps) {
     return '';
   });
 
+  // Trocador shows one prominent banner at the top of the widget for both a
+  // rejected amount and a genuinely unavailable pair, rather than burying it
+  // in inline copy. This mirrors that: loud, specific, and using the same
+  // reasoning Trocador gives for a no-route pair.
+  const criticalErrorBanner = createMemo(() => {
+    const error = quoteDiscovery.error();
+    if (!error) {
+      return null;
+    }
+
+    if (isAmountOutOfRangeError(error)) {
+      return describeApiErrorMessage(error, t('quote.noRouteExplanation'));
+    }
+
+    if (isNoRouteError(error)) {
+      return t('quote.noRouteExplanation');
+    }
+
+    return null;
+  });
+
   const routeStatus = createMemo(() => {
     if (!quoteQuery()) {
       return t('swap.selectPairAmount');
@@ -838,6 +884,12 @@ function SwapModal(props: SwapModalProps) {
         <div class="swap-card">
         <div class="swap-card__title">{t('swap.startExchange')}</div>
 
+        <Show when={criticalErrorBanner()}>
+          <div class="swap-card__alert" role="alert">
+            {criticalErrorBanner()}
+          </div>
+        </Show>
+
         <div class="swap-card__coins">
           <section class="swap-coin">
             <div class="swap-coin__label">{t('swap.youSend')}</div>
@@ -882,9 +934,9 @@ function SwapModal(props: SwapModalProps) {
                 <Show when={approximateUsd(sendAmountUsd())}>
                   <span>{approximateUsd(sendAmountUsd())}</span>
                 </Show>
-                <Show when={quoteDiscovery.minDeposit()}>
+                <Show when={displayMinDeposit()}>
                   <span class="swap-coin__min-hint">
-                    {t('quote.minHintLabel')}: {format.number(quoteDiscovery.minDeposit()!, 6)} {displayFromCurrency().ticker}
+                    {t('quote.minHintLabel')}: {format.number(displayMinDeposit()!, 6)} {displayFromCurrency().ticker}
                   </span>
                 </Show>
               </span>

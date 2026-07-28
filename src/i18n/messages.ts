@@ -146,6 +146,8 @@ const messages = {
       emptyFixed: 'No fixed-rate providers returned a route for this pair yet.',
       emptyFloating: 'No floating-rate providers returned a route for this pair yet.',
       noRoute: 'No provider route is available for this pair right now.',
+      noRouteExplanation:
+        "We couldn't find any rates for the desired amount and/or pair. Very small amounts sometimes don't cover network transaction costs. Some coin pairs have limited liquidity - you can split the swap in two using a more liquid coin as an intermediary.",
       belowMinimumPrefix: 'Minimum for this pair is',
       aboveMaximumPrefix: 'Maximum for this pair is',
       minHintLabel: 'Min',
@@ -676,6 +678,8 @@ const messages = {
       emptyFixed: 'Κανένας πάροχος σταθερής τιμής δεν επέστρεψε ακόμη διαδρομή για αυτό το pair.',
       emptyFloating: 'Κανένας πάροχος κυμαινόμενης τιμής δεν επέστρεψε ακόμη διαδρομή για αυτό το pair.',
       noRoute: 'Δεν υπάρχει διαθέσιμη διαδρομή παρόχου για αυτό το pair αυτή τη στιγμή.',
+      noRouteExplanation:
+        'Δεν βρέθηκαν διαθέσιμες τιμές για το ποσό ή/και το ζεύγος που επιλέξατε. Πολύ μικρά ποσά μερικές φορές δεν καλύπτουν τα τέλη δικτύου. Ορισμένα ζεύγη νομισμάτων έχουν περιορισμένη ρευστότητα - μπορείτε να χωρίσετε τη συναλλαγή σε δύο βήματα χρησιμοποιώντας ένα πιο ρευστό νόμισμα ως ενδιάμεσο.',
       belowMinimumPrefix: 'Το ελάχιστο για αυτό το ζεύγος είναι',
       aboveMaximumPrefix: 'Το μέγιστο για αυτό το ζεύγος είναι',
       minHintLabel: 'Ελάχ.',
@@ -1017,6 +1021,8 @@ const messages = {
       emptyFixed: 'Ningún proveedor de tasa fija devolvió una ruta para este par todavía.',
       emptyFloating: 'Ningún proveedor de tasa flotante devolvió una ruta para este par todavía.',
       noRoute: 'No hay una ruta de proveedor disponible para este par en este momento.',
+      noRouteExplanation:
+        'No encontramos tarifas disponibles para el monto y/o el par elegido. Los montos muy pequeños a veces no cubren los costos de red. Algunos pares de monedas tienen poca liquidez - puedes dividir el intercambio en dos pasos usando una moneda más líquida como intermediaria.',
       belowMinimumPrefix: 'El mínimo para este par es',
       aboveMaximumPrefix: 'El máximo para este par es',
       minHintLabel: 'Mín',
@@ -1392,6 +1398,8 @@ const messages = {
       emptyFixed: 'Aucun fournisseur à taux fixe n’a encore renvoyé de route pour cette paire.',
       emptyFloating: 'Aucun fournisseur à taux flottant n’a encore renvoyé de route pour cette paire.',
       noRoute: 'Aucune route fournisseur n’est disponible pour cette paire pour le moment.',
+      noRouteExplanation:
+        "Nous n'avons trouvé aucun taux disponible pour ce montant et/ou cette paire. Les très petits montants ne couvrent parfois pas les frais de réseau. Certaines paires de devises ont une liquidité limitée - vous pouvez diviser l'échange en deux étapes en utilisant une monnaie plus liquide comme intermédiaire.",
       belowMinimumPrefix: 'Le minimum pour cette paire est',
       aboveMaximumPrefix: 'Le maximum pour cette paire est',
       minHintLabel: 'Min',
@@ -1733,6 +1741,8 @@ const messages = {
       emptyFixed: 'Noch kein Anbieter mit Fixkurs hat eine Route für dieses Paar zurückgegeben.',
       emptyFloating: 'Noch kein Anbieter mit Floating-Kurs hat eine Route für dieses Paar zurückgegeben.',
       noRoute: 'Für dieses Paar ist derzeit keine Anbieter-Route verfügbar.',
+      noRouteExplanation:
+        'Für diesen Betrag und/oder dieses Paar konnten wir keine Kurse finden. Sehr kleine Beträge decken manchmal nicht die Netzwerkgebühren. Manche Währungspaare haben eine begrenzte Liquidität - du kannst den Swap in zwei Schritte aufteilen und eine liquidere Münze als Zwischenschritt nutzen.',
       belowMinimumPrefix: 'Das Minimum für dieses Paar ist',
       aboveMaximumPrefix: 'Das Maximum für dieses Paar ist',
       minHintLabel: 'Min',
@@ -2073,6 +2083,8 @@ const messages = {
       emptyFixed: '当前还没有固定汇率提供商为该交易对返回路线。',
       emptyFloating: '当前还没有浮动汇率提供商为该交易对返回路线。',
       noRoute: '当前该交易对没有可用提供商路线。',
+      noRouteExplanation:
+        '我们未能为该金额和/或交易对找到可用汇率。金额过小有时无法覆盖网络手续费。部分交易对流动性有限——你可以使用流动性更好的币种作为中间币，将兑换拆分为两步完成。',
       belowMinimumPrefix: '该交易对的最低金额是',
       aboveMaximumPrefix: '该交易对的最高金额是',
       minHintLabel: '最低',

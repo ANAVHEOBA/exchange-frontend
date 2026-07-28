@@ -25,6 +25,7 @@ export const API_CONFIG = {
     pairs: '/swap/pairs',
     rates: '/swap/rates',
     estimate: '/swap/estimate',
+    pairLimits: '/swap/pair-limits',
     donationTarget: '/swap/donation/target',
     donationRates: '/swap/donation/rates',
     donationCreate: '/swap/donation/create',
