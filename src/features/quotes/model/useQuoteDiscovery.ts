@@ -20,6 +20,10 @@ export interface QuoteDiscoveryController {
   bestRate: Accessor<Rate | null>;
   selectedRate: Accessor<Rate | null>;
   providerCount: Accessor<number>;
+  /** Pair-level minimum deposit from the last successfully resolved quote, if Trocador reported one. */
+  minDeposit: Accessor<number | null>;
+  /** Pair-level maximum deposit from the last successfully resolved quote, if Trocador reported one. */
+  maxDeposit: Accessor<number | null>;
   selectRate: (rate: Rate) => void;
   refresh: () => void;
   clear: () => void;
@@ -49,6 +53,8 @@ export function useQuoteDiscovery(options: UseQuoteDiscoveryOptions): QuoteDisco
   const bestRate = createMemo(() => rates.rates()[0] ?? null);
   const selectedRate = createMemo(() => rates.selectedRate() ?? bestRate());
   const providerCount = createMemo(() => rates.rates().length);
+  const minDeposit = createMemo(() => rates.quote()?.rates.min_deposit ?? null);
+  const maxDeposit = createMemo(() => rates.quote()?.rates.max_deposit ?? null);
 
   return {
     query: options.query,
@@ -62,6 +68,8 @@ export function useQuoteDiscovery(options: UseQuoteDiscoveryOptions): QuoteDisco
     bestRate,
     selectedRate,
     providerCount,
+    minDeposit,
+    maxDeposit,
     selectRate: rates.select,
     refresh: rates.refresh,
     clear: rates.clear,

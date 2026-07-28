@@ -146,6 +146,9 @@ const messages = {
       emptyFixed: 'No fixed-rate providers returned a route for this pair yet.',
       emptyFloating: 'No floating-rate providers returned a route for this pair yet.',
       noRoute: 'No provider route is available for this pair right now.',
+      belowMinimumPrefix: 'Minimum for this pair is',
+      aboveMaximumPrefix: 'Maximum for this pair is',
+      minHintLabel: 'Min',
       failed: 'Failed to load live quotes.',
     },
     swap: {
@@ -673,6 +676,9 @@ const messages = {
       emptyFixed: 'Κανένας πάροχος σταθερής τιμής δεν επέστρεψε ακόμη διαδρομή για αυτό το pair.',
       emptyFloating: 'Κανένας πάροχος κυμαινόμενης τιμής δεν επέστρεψε ακόμη διαδρομή για αυτό το pair.',
       noRoute: 'Δεν υπάρχει διαθέσιμη διαδρομή παρόχου για αυτό το pair αυτή τη στιγμή.',
+      belowMinimumPrefix: 'Το ελάχιστο για αυτό το ζεύγος είναι',
+      aboveMaximumPrefix: 'Το μέγιστο για αυτό το ζεύγος είναι',
+      minHintLabel: 'Ελάχ.',
       failed: 'Αποτυχία φόρτωσης ζωντανών προσφορών.',
     },
     swap: {
@@ -1011,6 +1017,9 @@ const messages = {
       emptyFixed: 'Ningún proveedor de tasa fija devolvió una ruta para este par todavía.',
       emptyFloating: 'Ningún proveedor de tasa flotante devolvió una ruta para este par todavía.',
       noRoute: 'No hay una ruta de proveedor disponible para este par en este momento.',
+      belowMinimumPrefix: 'El mínimo para este par es',
+      aboveMaximumPrefix: 'El máximo para este par es',
+      minHintLabel: 'Mín',
       failed: 'No se pudieron cargar las cotizaciones en vivo.',
     },
     swap: {
@@ -1383,6 +1392,9 @@ const messages = {
       emptyFixed: 'Aucun fournisseur à taux fixe n’a encore renvoyé de route pour cette paire.',
       emptyFloating: 'Aucun fournisseur à taux flottant n’a encore renvoyé de route pour cette paire.',
       noRoute: 'Aucune route fournisseur n’est disponible pour cette paire pour le moment.',
+      belowMinimumPrefix: 'Le minimum pour cette paire est',
+      aboveMaximumPrefix: 'Le maximum pour cette paire est',
+      minHintLabel: 'Min',
       failed: 'Impossible de charger les devis en direct.',
     },
     swap: {
@@ -1721,6 +1733,9 @@ const messages = {
       emptyFixed: 'Noch kein Anbieter mit Fixkurs hat eine Route für dieses Paar zurückgegeben.',
       emptyFloating: 'Noch kein Anbieter mit Floating-Kurs hat eine Route für dieses Paar zurückgegeben.',
       noRoute: 'Für dieses Paar ist derzeit keine Anbieter-Route verfügbar.',
+      belowMinimumPrefix: 'Das Minimum für dieses Paar ist',
+      aboveMaximumPrefix: 'Das Maximum für dieses Paar ist',
+      minHintLabel: 'Min',
       failed: 'Live-Quotes konnten nicht geladen werden.',
     },
     swap: {
@@ -2058,6 +2073,9 @@ const messages = {
       emptyFixed: '当前还没有固定汇率提供商为该交易对返回路线。',
       emptyFloating: '当前还没有浮动汇率提供商为该交易对返回路线。',
       noRoute: '当前该交易对没有可用提供商路线。',
+      belowMinimumPrefix: '该交易对的最低金额是',
+      aboveMaximumPrefix: '该交易对的最高金额是',
+      minHintLabel: '最低',
       failed: '加载实时报价失败。',
     },
     swap: {

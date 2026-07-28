@@ -162,6 +162,7 @@ export default function GiftCardOrderStatusPage() {
   const [checkoutImageFailed, setCheckoutImageFailed] = createSignal(false);
   const [stableOrder, setStableOrder] = createSignal<GiftCardOrderResponse | null>(null);
   const [stableOrderRef, setStableOrderRef] = createSignal('');
+  const [clientReady, setClientReady] = createSignal(false);
 
   const orderRef = createMemo(() => safeDecode(params.id)?.trim() ?? '');
   const productLabel = createMemo(() => safeDecode(readSearchParam(searchParams.product))?.trim() || null);
@@ -169,8 +170,15 @@ export default function GiftCardOrderStatusPage() {
   const visibleProductImage = createMemo(() => (checkoutImageFailed() ? null : productImage()));
   const queryCurrency = createMemo(() => safeDecode(readSearchParam(searchParams.currency))?.trim() || null);
   const queryValue = createMemo(() => safeDecode(readSearchParam(searchParams.value))?.trim() || null);
+  const fetchableOrderRef = createMemo(() => (clientReady() ? orderRef() || undefined : undefined));
 
-  const [order, { refetch }] = createResource(orderRef, giftcardsApi.getOrderStatus);
+  const [order, { refetch }] = createResource(fetchableOrderRef, async orderId => {
+    if (!orderId) {
+      throw new Error('Missing gift card order id');
+    }
+
+    return giftcardsApi.getOrderStatus(orderId);
+  });
   const currentOrder = createMemo(() => {
     const stable = stableOrder();
     if (stable && stableOrderRef() === orderRef()) {
@@ -179,6 +187,7 @@ export default function GiftCardOrderStatusPage() {
 
     return order() ?? null;
   });
+  const orderPending = createMemo(() => !clientReady() || order.loading);
 
   createEffect(() => {
     const nextOrder = order();
@@ -251,6 +260,7 @@ export default function GiftCardOrderStatusPage() {
   };
 
   onMount(() => {
+    setClientReady(true);
     pollTimer = window.setInterval(() => {
       if (!shouldStopGiftcardOrderPolling(currentOrder())) {
         void refetch();
@@ -341,8 +351,13 @@ export default function GiftCardOrderStatusPage() {
             fallback={<div class="giftcard-order-card giftcard-order-card--empty">No gift card order id provided.</div>}
           >
             <Show
-              when={currentOrder() || !order.loading}
-              fallback={<div class="giftcard-order-card giftcard-order-card--empty">Loading gift card order...</div>}
+              when={currentOrder() || !orderPending()}
+              fallback={
+                <div class="giftcard-order-card giftcard-order-card--empty giftcard-order-card--loading">
+                  <div class="assetar-page-loader__spinner" aria-hidden="true" />
+                  <span>Loading gift card order...</span>
+                </div>
+              }
             >
               <Show
                 when={currentOrder()}

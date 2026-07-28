@@ -844,9 +844,16 @@ function SwapModal(props: SwapModalProps) {
             </div>
             <div class="swap-coin__meta">
               <span>{displayFromCurrency().name}</span>
-              <Show when={approximateUsd(sendAmountUsd())}>
-                <span>{approximateUsd(sendAmountUsd())}</span>
-              </Show>
+              <span class="swap-coin__meta-details">
+                <Show when={approximateUsd(sendAmountUsd())}>
+                  <span>{approximateUsd(sendAmountUsd())}</span>
+                </Show>
+                <Show when={quoteDiscovery.minDeposit()}>
+                  <span class="swap-coin__min-hint">
+                    {t('quote.minHintLabel')}: {format.number(quoteDiscovery.minDeposit()!, 6)} {displayFromCurrency().ticker}
+                  </span>
+                </Show>
+              </span>
             </div>
           </section>
 

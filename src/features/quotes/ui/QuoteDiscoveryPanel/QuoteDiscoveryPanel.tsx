@@ -96,6 +96,33 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
       : t('quote.emptyFloating');
   });
 
+  /**
+   * When a fetch succeeds but returns zero routes, Trocador usually rejected the
+   * requested amount rather than the pair itself. Trocador's own rate response
+   * still tells us the pair's real min/max deposit even when `rates` is empty,
+   * so surface the actual number instead of a generic "no routes" message.
+   */
+  const amountBoundsMessage = createMemo(() => {
+    const requestedAmount = props.quote.query()?.amount;
+    const ticker = props.quote.query()?.from.toUpperCase();
+
+    if (requestedAmount === undefined || !ticker) {
+      return null;
+    }
+
+    const minDeposit = props.quote.minDeposit();
+    if (minDeposit && minDeposit > 0 && requestedAmount < minDeposit) {
+      return `${t('quote.belowMinimumPrefix')} ${format.number(minDeposit, 6)} ${ticker}.`;
+    }
+
+    const maxDeposit = props.quote.maxDeposit();
+    if (maxDeposit && maxDeposit > 0 && requestedAmount > maxDeposit) {
+      return `${t('quote.aboveMaximumPrefix')} ${format.number(maxDeposit, 6)} ${ticker}.`;
+    }
+
+    return null;
+  });
+
   return (
     <section class="quote-discovery">
       <div class="quote-discovery__header">
@@ -234,7 +261,7 @@ export default function QuoteDiscoveryPanel(props: QuoteDiscoveryPanelProps) {
 
         <Match when={providerCount() === 0}>
           <div class="quote-discovery__state">
-            {emptyMessage()}
+            {amountBoundsMessage() ?? emptyMessage()}
           </div>
         </Match>
       </Switch>

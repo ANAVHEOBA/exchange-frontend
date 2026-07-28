@@ -217,7 +217,7 @@ export default function SwapStatusPage() {
   const [now, setNow] = createSignal(Date.now());
   const [refreshing, setRefreshing] = createSignal(false);
   const [copiedField, setCopiedField] = createSignal<string | null>(null);
-  const [qrOpen, setQrOpen] = createSignal(false);
+  const [qrOpen, setQrOpen] = createSignal(true);
   const [qrMode, setQrMode] = createSignal<QrMode>('address');
   const [qrDataUrl, setQrDataUrl] = createSignal('');
   const [qrLoading, setQrLoading] = createSignal(false);

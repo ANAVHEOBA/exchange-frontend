@@ -34,13 +34,22 @@ function AppRoot(props: { children: any }) {
   return <I18nProvider forcedLocale={activeLocale}>{props.children}</I18nProvider>;
 }
 
+function AppLoadingFallback() {
+  return (
+    <div class="assetar-page-loader" role="status" aria-live="polite">
+      <div class="assetar-page-loader__spinner" aria-hidden="true" />
+      <span>Loading...</span>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Router
       root={props => (
         <MetaProvider>
           <Title>ASSETAR</Title>
-          <Suspense>
+          <Suspense fallback={<AppLoadingFallback />}>
             <AppRoot>{props.children}</AppRoot>
           </Suspense>
         </MetaProvider>

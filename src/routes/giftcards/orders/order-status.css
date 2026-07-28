@@ -29,6 +29,12 @@
   text-align: center;
 }
 
+.giftcard-order-card--loading {
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+}
+
 .giftcard-order-card--error {
   color: #b91c1c;
 }

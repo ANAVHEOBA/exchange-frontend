@@ -140,6 +140,14 @@
   font-size: 0.84rem;
 }
 
+.swap-coin__meta-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
 .swap-coin__switch {
   position: absolute;
   top: 50%;
